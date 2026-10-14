@@ -1,0 +1,580 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#17181a">
+<title>Gestão de Fibra Óptica</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: cabeçalho fixo, abas, faixa de indicadores, barra de filtros e tabela-planilha em coluna central de 1100px */
+:root{
+  --bg:#f8f8f7; --surface:#ffffff; --fg:#17181a; --muted:#6b6e74; --line:#e6e6e3; --soft:#f1f1ef;
+  --ink:#17181a; --ink-fg:#ffffff;
+  --ok:#1f8a4c; --ok-soft:#e5f4ea; --warn:#a15c07; --warn-soft:#fbf0dd; --bad:#c0362c;
+  --font:"Instrument Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#131416; --surface:#1b1c1f; --fg:#ececea; --muted:#9a9ca1; --line:#2c2d31; --soft:#25262a;
+  --ink:#ececea; --ink-fg:#131416; --ok:#4cc27c; --ok-soft:#173323; --warn:#e2a54b; --warn-soft:#3a2c15; --bad:#ef6b61; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#131416; --surface:#1b1c1f; --fg:#ececea; --muted:#9a9ca1; --line:#2c2d31; --soft:#25262a;
+  --ink:#ececea; --ink-fg:#131416; --ok:#4cc27c; --ok-soft:#173323; --warn:#e2a54b; --warn-soft:#3a2c15; --bad:#ef6b61; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--font);font-size:14px;line-height:1.45}
+button,input,select,textarea{font:inherit;color:inherit}
+.num{font-variant-numeric:tabular-nums}
+header.top{background:var(--surface);border-bottom:1px solid var(--line)}
+.wrap{max-width:1120px;margin:0 auto;padding-inline:16px}
+.brand{display:flex;gap:12px;align-items:center;padding-block:18px}
+.logo{width:40px;height:40px;border-radius:10px;background:var(--ink);color:var(--ink-fg);display:grid;place-items:center;flex:none}
+.brand h1{margin:0;font-size:19px;font-weight:600;letter-spacing:-.01em}
+.brand p{margin:0;color:var(--muted);font-size:13px}
+main{padding-block:24px 48px}
+.tabs{display:inline-flex;gap:2px;background:var(--soft);padding:4px;border-radius:10px;flex-wrap:wrap}
+.tabs button{border:0;background:none;padding:7px 12px;border-radius:7px;color:var(--muted);cursor:pointer;font-weight:500}
+.tabs button[aria-selected="true"]{background:var(--surface);color:var(--fg);box-shadow:0 1px 2px rgb(0 0 0/.08)}
+.notice{margin-top:14px;font-size:13px;color:var(--warn);background:var(--warn-soft);padding:8px 12px;border-radius:8px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:24px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;display:flex;gap:12px;align-items:center}
+.stat .ic{width:40px;height:40px;border-radius:9px;background:var(--soft);display:grid;place-items:center;flex:none}
+.stat small{display:block;color:var(--muted);font-size:12px}
+.stat b{font-size:19px;font-weight:600}
+.bar{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;align-items:center}
+.search{flex:1 1 260px;position:relative;min-width:0}
+.search svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--muted)}
+.field{height:36px;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:0 10px;min-width:0}
+.search .field{width:100%;padding-left:34px}
+.datef{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.datef label{font-size:12px;color:var(--muted)}
+.btn{height:36px;border-radius:8px;border:1px solid var(--line);background:var(--surface);padding:0 12px;cursor:pointer;display:inline-flex;align-items:center;gap:8px;font-weight:500;white-space:nowrap}
+.btn.primary{background:var(--ink);color:var(--ink-fg);border-color:var(--ink);font-weight:600}
+.btn.ghost{border-color:transparent;background:none;color:var(--muted)}
+.btn:hover{filter:brightness(.97)}
+.spacer{flex:1}
+:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
+.tablebox{margin-top:16px;background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:860px}
+th{font-size:13px;font-weight:600;color:var(--muted);text-align:left;padding:12px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:12px 10px;border-bottom:1px solid var(--line);vertical-align:middle}
+tr:last-child td{border-bottom:0}
+th.r,td.r{text-align:right}
+td.dim{color:var(--muted)}
+td.trunc{max-width:260px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+tr.done td{background:var(--ok-soft)}
+tr.done td.cli{text-decoration:line-through;text-decoration-color:var(--ok)}
+.chip{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;padding:2px 8px;border-radius:999px;background:var(--soft)}
+.chip.ok{background:var(--ok-soft);color:var(--ok)}
+.chip.pend{background:var(--warn-soft);color:var(--warn)}
+.obs{cursor:help}
+.icbtn{border:0;background:none;padding:6px;border-radius:6px;cursor:pointer;color:var(--fg)}
+.icbtn:hover{background:var(--soft)}
+.icbtn.del{color:var(--muted)}
+.check{width:28px;height:28px;border-radius:7px;border:1.5px solid var(--line);background:var(--surface);cursor:pointer;display:grid;place-items:center;color:transparent;font-weight:700;font-size:16px}
+.check.on{background:var(--ok);border-color:var(--ok);color:#fff}
+.empty{padding:36px 16px;text-align:center;color:var(--muted)}
+.foot{display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;padding:10px 12px;border-top:1px solid var(--line);font-size:13px;color:var(--muted)}
+.foot b{color:var(--fg)}
+/* equipes */
+.teams{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;margin-top:16px}
+.team{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;display:grid;gap:10px}
+.team h3{margin:0;font-size:16px;font-weight:600}
+.team .row{display:flex;justify-content:space-between;gap:8px;font-size:13px}
+.team .row span{color:var(--muted)}
+.team .acts{display:flex;gap:6px;flex-wrap:wrap}
+.team.off{opacity:.6}
+/* modal */
+.overlay{position:fixed;inset:0;background:rgb(0 0 0/.4);display:grid;place-items:center;padding:16px;z-index:10}
+.modal{background:var(--surface);border-radius:12px;width:min(560px,100%);max-height:calc(100vh - 32px);overflow:auto;padding:20px;display:grid;gap:14px}
+.modal h2{margin:0;font-size:17px;font-weight:600}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:520px){.grid2{grid-template-columns:1fr}}
+.f{display:grid;gap:4px}
+.f label{font-size:12px;font-weight:600;color:var(--muted)}
+.f .field{width:100%}
+textarea.field{height:auto;min-height:70px;padding:8px 10px;resize:vertical}
+.hint{font-size:12px;color:var(--muted)}
+.calc{display:flex;justify-content:space-between;align-items:center;background:var(--soft);border-radius:8px;padding:10px 12px}
+.calc b{font-size:18px}
+.calc.err{color:var(--bad)}
+.err-msg{color:var(--bad);font-size:13px}
+.mact{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--ink-fg);padding:10px 16px;border-radius:8px;font-size:13px;z-index:20}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{border:0;background:var(--surface);padding:0 12px;height:34px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--ink-fg)}
+.who{margin-left:auto;display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);min-width:0}
+.who img{width:24px;height:24px;border-radius:50%}
+.who span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:220px}
+.brand{flex-wrap:wrap}
+.who .btn{height:28px;padding:0 8px;font-size:12px}
+.gate{display:grid;place-items:center;padding-block:64px}
+.gatebox{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:28px;width:min(420px,100%);display:grid;gap:14px;text-align:center}
+.gatebox h2{margin:0;font-size:18px;font-weight:600}.gatebox p{margin:0;color:var(--muted)}
+.gatebox .btn{justify-content:center;height:42px}
+td.dots{width:36px;padding-right:0}
+.dotbtn{border:0;background:none;width:28px;height:28px;border-radius:6px;cursor:pointer;color:var(--muted);font-size:18px;line-height:1;font-weight:700}
+.dotbtn:hover,.dotbtn[aria-expanded="true"]{background:var(--soft);color:var(--fg)}
+.menu{position:fixed;z-index:15;background:var(--surface);border:1px solid var(--line);border-radius:10px;box-shadow:0 8px 24px rgb(0 0 0/.14);padding:4px;min-width:220px;display:grid}
+.menu button{border:0;background:none;text-align:left;padding:8px 10px;border-radius:6px;cursor:pointer;display:flex;gap:8px;align-items:center}
+.menu button:hover{background:var(--soft)}
+.menu button.danger{color:var(--bad)}
+.menu .meta{font-size:12px;color:var(--muted);padding:6px 10px 8px;border-bottom:1px solid var(--line);margin-bottom:4px}
+.hist{list-style:none;margin:0;padding:0;display:grid;gap:0}
+.hist li{position:relative;padding:0 0 14px 20px;border-left:2px solid var(--line);margin-left:6px;display:grid;gap:3px}
+.hist li:last-child{border-left-color:transparent}
+.hist li::before{content:"";position:absolute;left:-6px;top:3px;width:10px;height:10px;border-radius:50%;background:var(--surface);border:2px solid var(--fg)}
+.hist li.ok::before{border-color:var(--ok);background:var(--ok)}
+.hwho{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.hwho span{color:var(--muted);font-size:12px}
+.hchg{font-size:13px;background:var(--soft);border-radius:6px;padding:4px 8px}
+.hchg span{color:var(--muted)}
+.hchg s{color:var(--muted)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+html{color-scheme:light}body{margin:0}[hidden]{display:none!important}
+</style>
+</head>
+<body>
+
+<header class="top"><div class="wrap brand">
+  <div class="logo" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9a2 2 0 0 1-2-2V5h6v2a2 2 0 0 1-2 2Z"/><path d="M3 5V3M7 5V3"/><path d="M5 9v8.5a3.5 3.5 0 0 0 7 0v-11a3.5 3.5 0 0 1 7 0V15"/><path d="M17 15h4v2a2 2 0 0 1-4 0Z"/><path d="M19 21v-2"/></svg></div>
+  <div><h1>Gestão de Fibra Óptica</h1><p>Controle de metragem por instalação e acompanhamento de emendas e fusões</p></div>
+  <div class="who" id="who" hidden></div>
+</div></header>
+
+<div id="gate" class="gate"><div class="gatebox">
+  <h2>Acesso ao sistema</h2>
+  <p id="gate-msg">Carregando…</p>
+  <button class="btn primary" id="g-login" type="button" hidden><svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>Entrar com Google</button>
+  <button class="btn" id="g-out" type="button" hidden>Entrar com outra conta</button>
+</div></div>
+
+<main class="wrap" id="app" hidden>
+  <div class="tabs" role="tablist">
+    <button role="tab" id="tab-met" aria-selected="true" data-tab="met">Controle de Metragem</button>
+    <button role="tab" id="tab-em" aria-selected="false" data-tab="em">Emendas e Fusões</button>
+    <button role="tab" id="tab-eq" aria-selected="false" data-tab="eq">Equipes</button>
+    <button role="tab" id="tab-ac" aria-selected="false" data-tab="ac" hidden>Acesso</button>
+  </div>
+  <div id="notice" class="notice" hidden></div>
+
+  <!-- METRAGEM -->
+  <section id="pane-met">
+    <div class="stats">
+      <div class="stat"><div class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4M12 16h4M8 11h.01M8 16h.01"/></svg></div><div><small>Instalações no filtro</small><b class="num" id="s-inst">0</b></div></div>
+      <div class="stat"><div class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.3 15.3a2.4 2.4 0 0 1 0 3.4l-2.6 2.6a2.4 2.4 0 0 1-3.4 0L2.7 8.7a2.41 2.41 0 0 1 0-3.4l2.6-2.6a2.41 2.41 0 0 1 3.4 0Z"/><path d="m14.5 12.5 2-2M11.5 9.5l2-2M8.5 6.5l2-2M17.5 15.5l2-2"/></svg></div><div><small>Metragem utilizada no filtro</small><b class="num" id="s-met">0,00 m</b></div></div>
+      <div class="stat"><div class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></div><div><small>Equipes ativas</small><b class="num" id="s-eq">0</b></div></div>
+    </div>
+    <div class="bar">
+      <div class="search"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        <input id="m-q" class="field" type="search" placeholder="Buscar por nº da OS, local ou cliente…" aria-label="Buscar instalações"></div>
+      <select id="m-eq" class="field" aria-label="Filtrar por equipe"></select>
+      <div class="datef"><label for="m-de">De</label><input id="m-de" class="field" type="date"><label for="m-ate">Até</label><input id="m-ate" class="field" type="date"></div>
+      <button class="btn ghost" id="m-clear" type="button">Limpar</button>
+      <span class="spacer"></span>
+      <button class="btn" id="m-csv" type="button">Exportar CSV</button>
+      <button class="btn primary" id="m-new" type="button"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>Nova instalação</button>
+    </div>
+    <div class="tablebox">
+      <table><thead><tr><th aria-label="Opções"></th><th>Data</th><th>OS</th><th>Equipe</th><th>Local / Cliente</th><th class="r">Inicial</th><th class="r">Final</th><th class="r">Utilizada</th><th>Obs.</th><th></th></tr></thead>
+      <tbody id="m-body"></tbody></table>
+      <div class="foot"><span id="m-count"></span><span>Total utilizado: <b class="num" id="m-total">0,00 m</b></span></div>
+    </div>
+  </section>
+
+  <!-- EMENDAS -->
+  <section id="pane-em" hidden>
+    <div class="stats">
+      <div class="stat"><div class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M3 12h6M15 12h6"/></svg></div><div><small>Registros no filtro</small><b class="num" id="e-tot">0</b></div></div>
+      <div class="stat"><div class="ic" style="color:var(--warn)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div><div><small>Pendentes</small><b class="num" id="e-pend">0</b></div></div>
+      <div class="stat"><div class="ic" style="color:var(--ok)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6 9 17l-5-5"/></svg></div><div><small>Resolvidos</small><b class="num" id="e-ok">0</b></div></div>
+    </div>
+    <div class="bar">
+      <div class="search"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        <input id="e-q" class="field" type="search" placeholder="Buscar por cliente, OS ou localização…" aria-label="Buscar emendas"></div>
+      <select id="e-tipo" class="field" aria-label="Filtrar por tipo"><option value="">Emenda e fusão</option><option>Emenda</option><option>Fusão</option></select>
+      <select id="e-st" class="field" aria-label="Filtrar por status"><option value="">Todos os status</option><option value="pend">Pendentes</option><option value="ok">Resolvidos</option></select>
+      <div class="datef"><label for="e-de">De</label><input id="e-de" class="field" type="date"><label for="e-ate">Até</label><input id="e-ate" class="field" type="date"></div>
+      <button class="btn ghost" id="e-clear" type="button">Limpar</button>
+      <span class="spacer"></span>
+      <button class="btn" id="e-csv" type="button">Exportar CSV</button>
+      <button class="btn primary" id="e-new" type="button"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>Novo registro</button>
+    </div>
+    <div class="tablebox">
+      <table><thead><tr><th aria-label="Opções"></th><th>Resolvido</th><th>Data</th><th>Cliente</th><th>OS</th><th>Tipo</th><th>Localização</th><th>Observações</th><th></th></tr></thead>
+      <tbody id="e-body"></tbody></table>
+      <div class="foot"><span id="e-count"></span><span>Clique no quadrado para marcar como resolvido ✓</span></div>
+    </div>
+  </section>
+
+  <!-- EQUIPES -->
+  <section id="pane-eq" hidden>
+    <div class="bar"><p class="hint" style="margin:0">O cabo restante é a metragem final do último registro de cada equipe. Ela é usada como metragem inicial da próxima instalação.</p><span class="spacer"></span>
+      <button class="btn primary" id="t-new" type="button"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>Nova equipe</button></div>
+    <div class="teams" id="t-list"></div>
+  </section>
+
+  <!-- ACESSO (só administrador) -->
+  <section id="pane-ac" hidden>
+    <p class="hint" style="margin:24px 0 0">Só entram no sistema os e-mails liberados aqui. Cada funcionário entra com a conta Google desse e-mail.</p>
+    <div class="bar">
+      <input id="ac-email" class="field" type="email" placeholder="email.do.funcionario@gmail.com" aria-label="E-mail" style="flex:1 1 260px">
+      <input id="ac-nome" class="field" placeholder="Nome (opcional)" aria-label="Nome" style="flex:1 1 160px">
+      <button class="btn primary" id="ac-add" type="button">Liberar acesso</button>
+    </div>
+    <div class="tablebox"><table style="min-width:600px"><thead><tr><th>E-mail</th><th>Nome</th><th>Liberado em</th><th>Liberado por</th><th></th></tr></thead><tbody id="ac-body"></tbody></table></div>
+    <div class="team" style="margin-top:16px"><h3>Importar dados</h3>
+      <p class="hint" style="margin:0">Selecione o arquivo dados-importacao.json para trazer os registros da versão anterior. Registros com o mesmo código são substituídos.</p>
+      <input type="file" id="ac-file" accept="application/json,.json"></div>
+  </section>
+</main>
+
+<div id="modal-root"></div>
+<div id="toast" class="toast" hidden></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script>
+(function(){
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const fmt=n=>(Number(n)||0).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2});
+const parseNum=v=>{v=String(v??"").trim().replace(/\s|m$/gi,"");if(!v)return NaN;if(v.includes(","))v=v.replace(/\./g,"").replace(",",".");return Number(v)};
+const fmtDate=iso=>{if(!iso)return"—";const[y,m,d]=iso.split("-");return`${d}/${m}/${y.slice(2)}`};
+const today=()=>{const d=new Date();d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().slice(0,10)};
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+function toast(msg){const t=$("#toast");t.textContent=msg;t.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>t.hidden=true,2600)}
+
+const COLS=["equipes","instalacoes","emendas"];
+const S={equipes:[],instalacoes:[],emendas:[],loaded:false,mode:"pending"};
+const DEFAULT_TEAMS=[{id:"eq1",nome:"Antônio e Ruan",membros:"Antônio, Ruan",ativa:true},{id:"eq2",nome:"Airton e Gustavo",membros:"Airton, Gustavo",ativa:true},{id:"eq3",nome:"Suporte: Gabriel",membros:"Gabriel",ativa:true}];
+
+/* ---------- armazenamento ---------- */
+let ME={id:null,email:null,name:""};
+const fmtDT=ts=>new Date(ts).toLocaleString("pt-BR",{day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit",second:"2-digit"});
+/* histórico de alterações: guarda o id do usuário e, como referência, o e-mail/nome no momento da alteração */
+const stamp=()=>({em:Date.now(),por:ME.id||null,email:ME.email||null,nome:ME.name||null});
+const show=v=>(v===undefined||v===null||v==="")?"—":String(v);
+const FIELDS={
+  instalacoes:[["equipeId","Equipe",v=>teamName(v)||show(v)],["os","OS"],["data","Data",fmtDate],["local","Local / Cliente"],["inicial","Metragem inicial",v=>fmt(v)+" m"],["final","Metragem final",v=>fmt(v)+" m"],["obs","Observações"]],
+  emendas:[["cliente","Cliente"],["os","OS"],["data","Data",fmtDate],["tipo","Tipo"],["local","Localização"],["obs","Observações"],["resolvido","Status",v=>v?"Resolvido ✓":"Pendente"]]};
+function diff(col,a,b){return FIELDS[col].filter(([k])=>String(a[k]??"")!==String(b[k]??"")).map(([k,l,f])=>({campo:l,de:(f||show)(a[k]),para:(f||show)(b[k])}))}
+function withHist(col,old,neu,acao){
+  const h=(old&&Array.isArray(old.historico))?old.historico:[];let ent;
+  if(!old)ent={...stamp(),acao:"Criou o registro"};
+  else{const m=diff(col,old,neu);if(!m.length)return null;ent={...stamp(),acao:acao||"Alterou o registro",mudancas:m}}
+  return{...neu,historico:[...h,ent].slice(-200)}}
+function whoLabel(e){const name=e.nome||"",mail=e.email||"";return name&&mail?`${name} (${mail})`:(name||mail||"Usuário sem identificação")}
+const LS="fibra-optica-gh";
+let fs=null, auth=null, IS_ADMIN=false; const unsubs=[];
+function failMsg(e){return e&&e.code==="permission-denied"?"Sem permissão para esta ação. Fale com o administrador.":"Não foi possível salvar. Tente novamente."}
+async function save(col,rec){
+  const{id,...body}=rec;
+  fs.collection(col).doc(id).set(body).catch(e=>toast(failMsg(e)));
+  if(!navigator.onLine)toast("Sem internet: salvo no aparelho. Será enviado quando a conexão voltar.");
+  return true}
+async function remove(col,id){fs.collection(col).doc(id).delete().catch(e=>toast(failMsg(e)));return true}
+function gate(msg,canLogin,signedIn){$("#gate").hidden=false;$("#app").hidden=true;$("#gate-msg").textContent=msg;
+  $("#g-login").hidden=!canLogin||!!signedIn;$("#g-out").hidden=!signedIn}
+function loginErr(e){const c=e&&e.code||"";
+  if(c==="auth/unauthorized-domain")return"Este endereço ainda não está autorizado no Firebase. Em Authentication → Configurações → Domínios autorizados, adicione "+location.hostname+".";
+  if(c==="auth/network-request-failed")return"Sem conexão com a internet. Tente de novo quando tiver sinal.";
+  return"Não foi possível entrar ("+(c||"erro desconhecido")+"). Tente novamente."}
+function showWho(u){const w=$("#who");w.innerHTML="";
+  if(u.photoURL){const img=document.createElement("img");img.src=u.photoURL;img.alt="";img.referrerPolicy="no-referrer";w.append(img)}
+  const sp=document.createElement("span");sp.textContent=u.email;sp.title="Suas alterações ficam registradas com este e-mail";
+  const out=document.createElement("button");out.className="btn ghost";out.type="button";out.textContent="Sair";out.onclick=()=>auth.signOut();
+  w.append(sp,out);w.hidden=false}
+function openApp(){
+  $("#gate").hidden=true;$("#app").hidden=false;$("#tab-ac").hidden=!IS_ADMIN;
+  COLS.forEach(col=>unsubs.push(fs.collection(col).onSnapshot(snap=>{
+    S[col]=snap.docs.map(d=>({id:d.id,...d.data()}));S["_"+col]=1;
+    if(COLS.every(c=>S["_"+c]))S.loaded=true;render()
+  },e=>toast(e.code==="permission-denied"?"Sem permissão para ver os dados.":"Erro ao carregar os dados."))));
+  if(IS_ADMIN)unsubs.push(fs.collection("acesso").onSnapshot(sn=>{S.acesso=sn.docs.map(d=>({id:d.id,...d.data()}));renderAcesso()},()=>{}));
+}
+function boot(){
+  const cfg=window.FIREBASE_CONFIG;
+  if(!window.firebase||!cfg||!cfg.apiKey||/COLE/.test(cfg.apiKey)){gate("O Firebase ainda não foi configurado. Preencha o arquivo firebase-config.js seguindo o guia.",false);return}
+  firebase.initializeApp(cfg);auth=firebase.auth();fs=firebase.firestore();
+  fs.enablePersistence({synchronizeTabs:true}).catch(()=>{});
+  auth.getRedirectResult().catch(e=>gate(loginErr(e),true));
+  auth.onAuthStateChanged(async u=>{
+    unsubs.splice(0).forEach(f=>f());S.loaded=false;COLS.forEach(c=>{S[c]=[];delete S["_"+c]});S.acesso=[];
+    if(!u){$("#who").hidden=true;gate("Entre com sua conta Google para acessar o sistema.",true);return}
+    ME={id:u.uid,email:u.email,name:u.displayName||""};const em=(u.email||"").toLowerCase();
+    IS_ADMIN=(window.ADMIN_EMAILS||[]).map(x=>String(x).toLowerCase()).includes(em);
+    showWho(u);
+    let ok=IS_ADMIN;
+    if(!ok){try{ok=(await fs.collection("acesso").doc(em).get()).exists}catch(e){ok=false}}
+    if(!ok){gate(`O e-mail ${u.email} ainda não tem acesso. Peça ao administrador para liberar o seu e-mail.`,true,true);return}
+    openApp();render();
+  });
+}
+$("#g-login").onclick=async()=>{const p=new firebase.auth.GoogleAuthProvider();p.setCustomParameters({prompt:"select_account"});
+  try{await auth.signInWithPopup(p)}catch(e){
+    if(["auth/popup-blocked","auth/operation-not-supported-in-environment","auth/web-storage-unsupported"].includes(e.code))auth.signInWithRedirect(p);
+    else if(!["auth/popup-closed-by-user","auth/cancelled-popup-request"].includes(e.code))gate(loginErr(e),true)}};
+$("#g-out").onclick=()=>auth.signOut();
+
+/* ---------- acesso (administrador) ---------- */
+function renderAcesso(){const rows=(S.acesso||[]).slice().sort((a,b)=>a.id.localeCompare(b.id));
+  $("#ac-body").innerHTML=rows.length?rows.map(r=>`<tr><td><b>${esc(r.id)}</b></td><td>${esc(r.nome||"—")}</td><td class="num dim">${r.liberadoEm?esc(fmtDT(r.liberadoEm)):"—"}</td><td class="dim">${esc(r.liberadoPor||"—")}</td><td class="r"><button class="btn ghost" data-ac-del="${esc(r.id)}">Remover</button></td></tr>`).join("")
+   :'<tr><td colspan="5" class="empty">Nenhum e-mail liberado ainda. Adicione o e-mail de cada funcionário acima.</td></tr>'}
+$("#ac-add").onclick=()=>{const em=$("#ac-email").value.trim().toLowerCase();
+  if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)){toast("Digite um e-mail válido.");return}
+  fs.collection("acesso").doc(em).set({nome:$("#ac-nome").value.trim(),liberadoEm:Date.now(),liberadoPor:ME.email}).catch(e=>toast(failMsg(e)));
+  $("#ac-email").value="";$("#ac-nome").value="";toast(em+" liberado.")};
+$("#ac-file").onchange=async e=>{const f=e.target.files[0];if(!f)return;
+  try{const o=JSON.parse(await f.text());const list=[];
+    COLS.forEach(c=>Object.entries(o[c]||{}).forEach(([id,body])=>list.push([c,id,body])));
+    if(!list.length){toast("O arquivo não tem registros.");return}
+    for(let i=0;i<list.length;i+=400){const b=fs.batch();
+      list.slice(i,i+400).forEach(([c,id,body])=>{let x={...body};
+        if(c!=="equipes"){const h=Array.isArray(x.historico)?x.historico:[];x.historico=[...h,{...stamp(),acao:"Importou o registro da versão anterior"}]}
+        b.set(fs.collection(c).doc(id),x)});
+      await b.commit()}
+    toast(list.length+" registros importados.")}
+  catch(err){toast(err.code==="permission-denied"?"Sem permissão para importar.":"Arquivo inválido.")}
+  e.target.value=""};
+
+/* ---------- abas ---------- */
+let tab="met";
+document.querySelectorAll("[data-tab]").forEach(b=>b.onclick=()=>{tab=b.dataset.tab;
+  document.querySelectorAll("[data-tab]").forEach(x=>x.setAttribute("aria-selected",x===b));
+  ["met","em","eq","ac"].forEach(k=>$("#pane-"+k).hidden=k!==tab);
+  try{localStorage.setItem(LS+"-tab",tab)}catch(e){}});
+try{const t=localStorage.getItem(LS+"-tab");if(t&&t!=="met"&&t!=="ac")document.querySelector(`[data-tab="${t}"]`).click()}catch(e){}
+
+/* ---------- helpers de domínio ---------- */
+const teamName=id=>{const t=S.equipes.find(t=>t.id===id);return t?t.nome:null};
+const sortInst=a=>[...a].sort((x,y)=>(y.data||"").localeCompare(x.data||"")||(y.inicial-x.inicial)||((y.criadoEm||0)-(x.criadoEm||0)));
+function lastFinal(teamId,excludeId){
+  const rs=S.instalacoes.filter(r=>r.equipeId===teamId&&r.id!==excludeId);
+  if(!rs.length)return null;
+  rs.sort((x,y)=>(y.data||"").localeCompare(x.data||"")||((y.criadoEm||0)-(x.criadoEm||0))||(x.final-y.final));
+  return rs[0];
+}
+const inRange=(d,de,ate)=>(!de||d>=de)&&(!ate||d<=ate);
+
+/* ---------- render ---------- */
+function filteredInst(){
+  const q=$("#m-q").value.trim().toLowerCase(),eq=$("#m-eq").value,de=$("#m-de").value,ate=$("#m-ate").value;
+  return sortInst(S.instalacoes.filter(r=>(!eq||r.equipeId===eq)&&inRange(r.data||"",de,ate)&&
+    (!q||[r.os,r.local,r.obs,r.equipeNome].join(" ").toLowerCase().includes(q))));
+}
+function filteredEm(){
+  const q=$("#e-q").value.trim().toLowerCase(),tp=$("#e-tipo").value,st=$("#e-st").value,de=$("#e-de").value,ate=$("#e-ate").value;
+  return S.emendas.filter(r=>(!tp||r.tipo===tp)&&(!st||(st==="ok")===!!r.resolvido)&&inRange(r.data||"",de,ate)&&
+    (!q||[r.cliente,r.os,r.local,r.obs].join(" ").toLowerCase().includes(q)))
+    .sort((x,y)=>(!!x.resolvido-!!y.resolvido)||(y.data||"").localeCompare(x.data||"")||((y.criadoEm||0)-(x.criadoEm||0)));
+}
+const pencil='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.17 6.81a1 1 0 0 0-3.98-3.98L3.84 16.17a2 2 0 0 0-.5.83l-1.32 4.35a.5.5 0 0 0 .62.62l4.35-1.32a2 2 0 0 0 .83-.5Z"/><path d="m15 5 4 4"/></svg>';
+const trash='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>';
+const bubble='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>';
+
+const dots=(col,r)=>{const h=r.historico||[];const l=h[h.length-1];return`<td class="dots"><button class="dotbtn" data-menu="${col}" data-id="${esc(r.id)}" aria-haspopup="menu" aria-expanded="false" aria-label="Opções e histórico" title="${l?"Última alteração: "+esc(fmtDT(l.em)):"Opções"}">⋮</button></td>`};
+function renderTeamSelect(){
+  const sel=$("#m-eq"),v=sel.value;
+  sel.innerHTML='<option value="">Todas as equipes</option>'+S.equipes.slice().sort((a,b)=>a.nome.localeCompare(b.nome)).map(t=>`<option value="${esc(t.id)}">${esc(t.nome)}</option>`).join("");
+  sel.value=S.equipes.some(t=>t.id===v)?v:"";
+}
+function render(){
+  renderTeamSelect();
+  const loading=!S.loaded;
+  // metragem
+  const ins=filteredInst();
+  const total=ins.reduce((s,r)=>s+(Number(r.inicial)-Number(r.final)),0);
+  $("#s-inst").textContent=ins.length;$("#s-met").textContent=fmt(total)+" m";
+  $("#s-eq").textContent=S.equipes.filter(t=>t.ativa!==false).length;
+  $("#m-total").textContent=fmt(total)+" m";
+  $("#m-count").textContent=`${ins.length} de ${S.instalacoes.length} instalações`;
+  $("#m-body").innerHTML=loading?'<tr><td colspan="10" class="empty">Carregando instalações…</td></tr>':
+    !ins.length?`<tr><td colspan="10" class="empty">${S.instalacoes.length?"Nenhuma instalação encontrada com esses filtros.":"Nenhuma instalação registrada. Clique em <b>Nova instalação</b> para lançar a primeira."}</td></tr>`:
+    ins.map(r=>{const u=Number(r.inicial)-Number(r.final);return`<tr>
+      ${dots("instalacoes",r)}
+      <td class="num"><b>${fmtDate(r.data)}</b></td>
+      <td class="num">${r.os?esc(r.os):'<span class="dim">—</span>'}</td>
+      <td>${esc(teamName(r.equipeId)||r.equipeNome||"—")}</td>
+      <td class="trunc" title="${esc(r.local)}">${esc(r.local)||'<span style="color:var(--muted)">—</span>'}</td>
+      <td class="r dim num">${fmt(r.inicial)} m</td><td class="r dim num">${fmt(r.final)} m</td>
+      <td class="r num"><b>${fmt(u)} m</b></td>
+      <td><span class="chip obs" title="${esc(r.obs||"Sem observações")}">${bubble}${r.obs?1:0}</span></td>
+      <td class="r" style="white-space:nowrap"><button class="icbtn" data-edit-i="${esc(r.id)}" aria-label="Editar">${pencil}</button></td></tr>`}).join("");
+  // emendas
+  const em=filteredEm();
+  $("#e-tot").textContent=em.length;$("#e-pend").textContent=em.filter(r=>!r.resolvido).length;$("#e-ok").textContent=em.filter(r=>r.resolvido).length;
+  $("#e-count").textContent=`${em.length} de ${S.emendas.length} registros`;
+  $("#e-body").innerHTML=loading?'<tr><td colspan="9" class="empty">Carregando registros…</td></tr>':
+    !em.length?`<tr><td colspan="9" class="empty">${S.emendas.length?"Nenhum registro encontrado com esses filtros.":"Nenhuma emenda ou fusão registrada. Clique em <b>Novo registro</b> para começar."}</td></tr>`:
+    em.map(r=>`<tr class="${r.resolvido?"done":""}">
+      ${dots("emendas",r)}
+      <td><button class="check ${r.resolvido?"on":""}" data-tog="${esc(r.id)}" aria-pressed="${!!r.resolvido}" aria-label="Marcar como resolvido">✓</button></td>
+      <td class="num"><b>${fmtDate(r.data)}</b></td>
+      <td class="cli"><b>${esc(r.cliente)}</b></td>
+      <td class="num">${r.os?esc(r.os):"—"}</td>
+      <td><span class="chip">${esc(r.tipo)}</span></td>
+      <td class="trunc" title="${esc(r.local)}">${esc(r.local)||"—"}</td>
+      <td class="trunc" title="${esc(r.obs)}">${esc(r.obs)||"—"}</td>
+      <td class="r" style="white-space:nowrap"><span class="chip ${r.resolvido?"ok":"pend"}">${r.resolvido?"Resolvido":"Pendente"}</span><button class="icbtn" data-edit-e="${esc(r.id)}" aria-label="Editar">${pencil}</button></td></tr>`).join("");
+  // equipes
+  $("#t-list").innerHTML=loading?'<p class="hint">Carregando equipes…</p>':!S.equipes.length?'<p class="hint">Nenhuma equipe cadastrada.</p>':
+    S.equipes.slice().sort((a,b)=>(b.ativa!==false)-(a.ativa!==false)||a.nome.localeCompare(b.nome)).map(t=>{
+      const rs=S.instalacoes.filter(r=>r.equipeId===t.id);const used=rs.reduce((s,r)=>s+(r.inicial-r.final),0);const lf=lastFinal(t.id);
+      return`<div class="team ${t.ativa===false?"off":""}"><div style="display:flex;justify-content:space-between;gap:8px;align-items:start"><h3>${esc(t.nome)}</h3><span class="chip ${t.ativa===false?"":"ok"}">${t.ativa===false?"Inativa":"Ativa"}</span></div>
+      <div class="row"><span>Funcionários</span><b style="text-align:right">${esc(t.membros||"—")}</b></div>
+      <div class="row"><span>Instalações</span><b class="num">${rs.length}</b></div>
+      <div class="row"><span>Metragem utilizada</span><b class="num">${fmt(used)} m</b></div>
+      <div class="row"><span>Cabo restante</span><b class="num">${lf?fmt(lf.final)+" m":"—"}</b></div>
+      <div class="acts"><button class="btn" data-edit-t="${esc(t.id)}">Editar</button><button class="btn ghost" data-act-t="${esc(t.id)}">${t.ativa===false?"Reativar":"Desativar"}</button>${IS_ADMIN?`<button class="btn ghost" data-del-t="${esc(t.id)}">Excluir</button>`:""}</div></div>`}).join("");
+}
+["#m-q","#m-eq","#m-de","#m-ate","#e-q","#e-tipo","#e-st","#e-de","#e-ate"].forEach(s=>$(s).addEventListener("input",render));
+$("#m-clear").onclick=()=>{["#m-q","#m-de","#m-ate"].forEach(s=>$(s).value="");$("#m-eq").value="";render()};
+$("#e-clear").onclick=()=>{["#e-q","#e-de","#e-ate"].forEach(s=>$(s).value="");$("#e-tipo").value="";$("#e-st").value="";render()};
+
+/* ---------- modal ---------- */
+function modal(html,onMount){const root=$("#modal-root");root.innerHTML=`<div class="overlay"><div class="modal" role="dialog" aria-modal="true">${html}</div></div>`;
+  const ov=root.firstChild;ov.addEventListener("mousedown",e=>{if(e.target===ov)close()});
+  const close=()=>root.innerHTML="";document.addEventListener("keydown",function k(e){if(e.key==="Escape"){close();document.removeEventListener("keydown",k)}});
+  onMount(ov,close);const f=ov.querySelector("input,select,textarea");f&&f.focus()}
+function confirmBox(text,onYes){modal(`<h2>Confirmar exclusão</h2><p style="margin:0">${esc(text)}</p><div class="mact"><button class="btn" id="c-no">Cancelar</button><button class="btn primary" id="c-yes" style="background:var(--bad);border-color:var(--bad);color:#fff">Excluir</button></div>`,(ov,close)=>{
+  ov.querySelector("#c-no").onclick=close;ov.querySelector("#c-yes").onclick=async()=>{close();await onYes()}})}
+
+function instForm(rec){
+  const isNew=!rec;rec=rec||{id:uid(),data:today(),equipeId:"",os:"",local:"",inicial:"",final:"",obs:""};
+  const teams=S.equipes.filter(t=>t.ativa!==false||t.id===rec.equipeId);
+  modal(`<h2>${isNew?"Nova instalação":"Editar instalação"}</h2>
+  <div class="grid2">
+    <div class="f"><label for="i-eq">Equipe responsável</label><select id="i-eq" class="field"><option value="">Selecione…</option>${teams.map(t=>`<option value="${esc(t.id)}" ${t.id===rec.equipeId?"selected":""}>${esc(t.nome)}</option>`).join("")}</select></div>
+    <div class="f"><label for="i-os">ID da OS</label><input id="i-os" class="field" value="${esc(rec.os)}" placeholder="Ex.: 10452"></div>
+    <div class="f"><label for="i-data">Data</label><input id="i-data" class="field" type="date" value="${esc(rec.data)}"></div>
+    <div class="f"><label for="i-local">Local / Cliente</label><input id="i-local" class="field" value="${esc(rec.local)}" placeholder="Endereço ou nome do cliente"></div>
+    <div class="f"><label for="i-ini">Metragem inicial (m)</label><input id="i-ini" class="field num" inputmode="decimal" value="${rec.inicial===""?"":fmt(rec.inicial)}" placeholder="Ex.: 1.000,00"></div>
+    <div class="f"><label for="i-fin">Metragem final (m)</label><input id="i-fin" class="field num" inputmode="decimal" value="${rec.final===""?"":fmt(rec.final)}" placeholder="Ex.: 900,00"></div>
+  </div>
+  <div class="hint" id="i-hint"></div>
+  <div class="calc" id="i-calc"><span>Metragem utilizada</span><b class="num" id="i-use">—</b></div>
+  <div class="f"><label for="i-obs">Observações</label><textarea id="i-obs" class="field" placeholder="Opcional">${esc(rec.obs)}</textarea></div>
+  <div class="err-msg" id="i-err" hidden></div>
+  <div class="mact"><button class="btn" id="i-cancel">Cancelar</button><button class="btn primary" id="i-save">${isNew?"Registrar":"Salvar alterações"}</button></div>`,(ov,close)=>{
+    const q=s=>ov.querySelector(s);let touchedIni=!isNew;
+    const calc=()=>{const a=parseNum(q("#i-ini").value),b=parseNum(q("#i-fin").value);const box=q("#i-calc");
+      if(isNaN(a)||isNaN(b)){q("#i-use").textContent="—";box.classList.remove("err");return}
+      const u=a-b;q("#i-use").textContent=u<0?"Final maior que inicial":fmt(u)+" m";box.classList.toggle("err",u<0)};
+    const hint=()=>{const id=q("#i-eq").value;const lf=id&&lastFinal(id,rec.id);
+      q("#i-hint").textContent=lf?`Último registro desta equipe (${fmtDate(lf.data)}${lf.os?", OS "+lf.os:""}) terminou com ${fmt(lf.final)} m.`:(id?"Primeiro registro desta equipe: informe a metragem do cabo novo.":"");
+      if(isNew&&lf&&!touchedIni){q("#i-ini").value=fmt(lf.final);calc()}};
+    q("#i-eq").onchange=hint;q("#i-ini").oninput=()=>{touchedIni=true;calc()};q("#i-fin").oninput=calc;
+    hint();calc();q("#i-cancel").onclick=close;
+    q("#i-save").onclick=async()=>{const err=q("#i-err");const a=parseNum(q("#i-ini").value),b=parseNum(q("#i-fin").value);const eq=q("#i-eq").value;
+      const m=!eq?"Selecione a equipe responsável.":!q("#i-data").value?"Informe a data do serviço.":isNaN(a)?"Informe a metragem inicial.":isNaN(b)?"Informe a metragem final.":a<0||b<0?"As metragens não podem ser negativas.":b>a?"A metragem final não pode ser maior que a inicial: o cabo diminui conforme é usado.":"";
+      if(m){err.textContent=m;err.hidden=false;return}
+      const out={id:rec.id,equipeId:eq,equipeNome:teamName(eq),os:q("#i-os").value.trim(),data:q("#i-data").value,local:q("#i-local").value.trim(),inicial:a,final:b,utilizada:Math.round((a-b)*100)/100,obs:q("#i-obs").value.trim(),criadoEm:rec.criadoEm||Date.now()};
+      const outH=withHist("instalacoes",isNew?null:rec,out);if(!outH){close();toast("Nenhuma alteração para salvar.");return}
+      q("#i-save").disabled=true;if(await save("instalacoes",outH)){close();toast(isNew?`Instalação registrada: ${fmt(out.utilizada)} m utilizados.`:"Instalação atualizada.")}else q("#i-save").disabled=false}
+  });
+}
+function emForm(rec){
+  const isNew=!rec;rec=rec||{id:uid(),cliente:"",os:"",data:today(),tipo:"Emenda",local:"",obs:"",resolvido:false};
+  modal(`<h2>${isNew?"Novo registro de emenda ou fusão":"Editar registro"}</h2>
+  <div class="grid2">
+    <div class="f" style="grid-column:1/-1"><label for="x-cli">Nome do cliente</label><input id="x-cli" class="field" value="${esc(rec.cliente)}"></div>
+    <div class="f"><label for="x-os">ID da OS (se houver)</label><input id="x-os" class="field" value="${esc(rec.os)}"></div>
+    <div class="f"><label for="x-data">Data</label><input id="x-data" class="field" type="date" value="${esc(rec.data)}"></div>
+    <div class="f"><label>Tipo</label><div class="seg" id="x-tipo">${["Emenda","Fusão"].map(t=>`<button type="button" aria-pressed="${rec.tipo===t}" data-v="${t}">${t}</button>`).join("")}</div></div>
+    <div class="f"><label for="x-st">Status</label><select id="x-st" class="field"><option value="0">Pendente</option><option value="1" ${rec.resolvido?"selected":""}>Resolvido ✓</option></select></div>
+    <div class="f" style="grid-column:1/-1"><label for="x-loc">Localização</label><input id="x-loc" class="field" value="${esc(rec.local)}" placeholder="Ex.: poste 14, caixa CTO-07, Rua padre Diogo"></div>
+  </div>
+  <div class="f"><label for="x-obs">Observações</label><textarea id="x-obs" class="field" placeholder="Detalhes do local e do problema">${esc(rec.obs)}</textarea></div>
+  <div class="err-msg" id="x-err" hidden></div>
+  <div class="mact"><button class="btn" id="x-cancel">Cancelar</button><button class="btn primary" id="x-save">${isNew?"Registrar":"Salvar alterações"}</button></div>`,(ov,close)=>{
+    const q=s=>ov.querySelector(s);let tipo=rec.tipo;
+    q("#x-tipo").onclick=e=>{const b=e.target.closest("button");if(!b)return;tipo=b.dataset.v;q("#x-tipo").querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed",x===b))};
+    q("#x-cancel").onclick=close;
+    q("#x-save").onclick=async()=>{const cli=q("#x-cli").value.trim();if(!cli){const e=q("#x-err");e.textContent="Informe o nome do cliente.";e.hidden=false;return}
+      const res=q("#x-st").value==="1";
+      const out={id:rec.id,cliente:cli,os:q("#x-os").value.trim(),data:q("#x-data").value,tipo,local:q("#x-loc").value.trim(),obs:q("#x-obs").value.trim(),resolvido:res,resolvidoEm:res?(rec.resolvidoEm||today()):null,criadoEm:rec.criadoEm||Date.now()};
+      const outH=withHist("emendas",isNew?null:rec,out,(!isNew&&out.resolvido!==!!rec.resolvido)?(out.resolvido?"Marcou como resolvido ✓":"Reabriu como pendente"):null);if(!outH){close();toast("Nenhuma alteração para salvar.");return}
+      q("#x-save").disabled=true;if(await save("emendas",outH)){close();toast(isNew?"Registro adicionado.":"Registro atualizado.")}else q("#x-save").disabled=false}
+  });
+}
+function teamForm(rec){
+  const isNew=!rec;rec=rec||{id:uid(),nome:"",membros:"",ativa:true};
+  modal(`<h2>${isNew?"Nova equipe":"Editar equipe"}</h2>
+  <div class="f"><label for="t-nome">Nome da equipe</label><input id="t-nome" class="field" value="${esc(rec.nome)}" placeholder="Ex.: Carlos e Pedro"></div>
+  <div class="f"><label for="t-mem">Funcionários</label><input id="t-mem" class="field" value="${esc(rec.membros)}" placeholder="Separe os nomes por vírgula"></div>
+  <div class="err-msg" id="t-err" hidden></div>
+  <div class="mact"><button class="btn" id="t-cancel">Cancelar</button><button class="btn primary" id="t-save">${isNew?"Adicionar equipe":"Salvar"}</button></div>`,(ov,close)=>{
+    const q=s=>ov.querySelector(s);q("#t-cancel").onclick=close;
+    q("#t-save").onclick=async()=>{const nome=q("#t-nome").value.trim();
+      if(!nome||S.equipes.some(t=>t.id!==rec.id&&t.nome.toLowerCase()===nome.toLowerCase())){const e=q("#t-err");e.textContent=nome?"Já existe uma equipe com esse nome.":"Informe o nome da equipe.";e.hidden=false;return}
+      const out={...rec,nome,membros:q("#t-mem").value.trim(),criadoEm:rec.criadoEm||Date.now()};
+      q("#t-save").disabled=true;if(await save("equipes",out)){close();toast(isNew?"Equipe adicionada.":"Equipe atualizada.")}else q("#t-save").disabled=false}
+  });
+}
+$("#m-new").onclick=()=>instForm();$("#e-new").onclick=()=>emForm();$("#t-new").onclick=()=>teamForm();
+
+/* ---------- menu ⋮ e histórico ---------- */
+let menuEl=null;
+function closeMenu(){if(menuEl){menuEl.remove();menuEl=null;document.querySelectorAll('.dotbtn[aria-expanded="true"]').forEach(x=>x.setAttribute("aria-expanded","false"))}}
+function openMenu(btn){const col=btn.dataset.menu,id=btn.dataset.id;const r=S[col].find(x=>x.id===id);if(!r)return;
+  closeMenu();btn.setAttribute("aria-expanded","true");const h=r.historico||[];const l=h[h.length-1];
+  const m=document.createElement("div");m.className="menu";m.setAttribute("role","menu");
+  m.innerHTML=`<div class="meta">${l?"Última alteração: "+esc(fmtDT(l.em)):"Sem alterações registradas"}</div>
+    <button role="menuitem" data-mact="hist" data-col="${col}" data-id="${esc(id)}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg> Ver histórico de alterações${h.length?` (${h.length})`:""}</button>
+    <button role="menuitem" data-mact="edit" data-col="${col}" data-id="${esc(id)}">${pencil} Editar</button>
+    ${IS_ADMIN?"":"<!--"}<button role="menuitem" class="danger" data-mact="del" data-col="${col}" data-id="${esc(id)}">${trash} Excluir</button>${IS_ADMIN?"":"-->"}`;
+  document.body.append(m);menuEl=m;const rc=btn.getBoundingClientRect(),mh=m.offsetHeight,mw=m.offsetWidth;
+  let top=rc.bottom+4;if(top+mh>window.innerHeight-8)top=Math.max(8,rc.top-mh-4);
+  m.style.top=top+"px";m.style.left=Math.max(8,Math.min(rc.left,window.innerWidth-mw-8))+"px";m.querySelector("[data-mact]").focus()}
+window.addEventListener("scroll",closeMenu,true);window.addEventListener("resize",closeMenu);
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeMenu()});
+async function histModal(col,id){const r=S[col].find(x=>x.id===id);if(!r)return;const h=(r.historico||[]).slice().reverse();
+  const title=col==="instalacoes"?`OS ${r.os||"sem número"} · ${fmtDate(r.data)} · ${teamName(r.equipeId)||r.equipeNome||""}`:`${r.cliente}${r.os?" · OS "+r.os:""} · ${fmtDate(r.data)}`;
+  modal(`<h2>Histórico de alterações</h2><p class="hint" style="margin:0">${esc(title)}</p>
+  <ol class="hist">${h.length?h.map(e=>`<li class="${/resolvido/.test(e.acao)?"ok":""}"><div class="hwho"><b>${esc(whoLabel(e))}</b><span class="num">${esc(fmtDT(e.em))}</span></div><div>${esc(e.acao)}</div>${(e.mudancas||[]).map(m=>`<div class="hchg"><span>${esc(m.campo)}:</span> <s>${esc(m.de)}</s> → <b>${esc(m.para)}</b></div>`).join("")}</li>`).join("")
+   :'<li>Nenhuma alteração registrada ainda. Este registro foi criado antes do controle de alterações; as próximas mudanças aparecerão aqui.</li>'}</ol>
+  <div class="mact"><button class="btn" id="h-close">Fechar</button></div>`,(ov,close)=>{ov.querySelector("#h-close").onclick=close})}
+
+document.addEventListener("click",async e=>{
+  if(menuEl&&!e.target.closest(".menu")&&!e.target.closest(".dotbtn"))closeMenu();
+  const b=e.target.closest("button");if(!b)return;const d=b.dataset;
+  if(d.menu){if(b.getAttribute("aria-expanded")==="true")closeMenu();else openMenu(b);return}
+  if(d.mact){closeMenu();const col=d.col,r=S[col].find(x=>x.id===d.id);if(!r)return;
+    if(d.mact==="hist")histModal(col,r.id);
+    else if(d.mact==="edit")(col==="instalacoes"?instForm:emForm)(r);
+    else confirmBox(col==="instalacoes"?`Excluir a instalação de ${fmtDate(r.data)}${r.os?" (OS "+r.os+")":""}? O histórico dela também será apagado.`:`Excluir o registro de ${r.cliente}? O histórico dele também será apagado.`,()=>remove(col,r.id));
+    return}
+  if(d.editI)instForm(S.instalacoes.find(r=>r.id===d.editI));
+  else if(d.delI){const r=S.instalacoes.find(r=>r.id===d.delI);confirmBox(`Excluir a instalação de ${fmtDate(r.data)}${r.os?" (OS "+r.os+")":""}?`,()=>remove("instalacoes",r.id))}
+  else if(d.editE)emForm(S.emendas.find(r=>r.id===d.editE));
+  else if(d.delE){const r=S.emendas.find(r=>r.id===d.delE);confirmBox(`Excluir o registro de ${r.cliente}?`,()=>remove("emendas",r.id))}
+  else if(d.tog){const r=S.emendas.find(r=>r.id===d.tog);const res=!r.resolvido;if(await save("emendas",withHist("emendas",r,{...r,resolvido:res,resolvidoEm:res?today():null},res?"Marcou como resolvido ✓":"Reabriu como pendente")))toast(res?`${r.cliente}: marcado como resolvido ✓`:`${r.cliente}: voltou para pendente`)}
+  else if(d.acDel){const em=d.acDel;confirmBox(`Remover o acesso de ${em}? A pessoa não conseguirá mais entrar.`,()=>fs.collection("acesso").doc(em).delete().catch(x=>toast(failMsg(x))))}
+  else if(d.editT)teamForm(S.equipes.find(t=>t.id===d.editT));
+  else if(d.actT){const t=S.equipes.find(t=>t.id===d.actT);save("equipes",{...t,ativa:t.ativa===false})}
+  else if(d.delT){const t=S.equipes.find(t=>t.id===d.delT);const n=S.instalacoes.filter(r=>r.equipeId===t.id).length;
+    confirmBox(n?`A equipe ${t.nome} tem ${n} instalações registradas. Elas continuam no histórico com o nome da equipe. Excluir mesmo assim?`:`Excluir a equipe ${t.nome}?`,()=>remove("equipes",t.id))}
+});
+
+/* ---------- exportação CSV ---------- */
+const csvCell=v=>{v=String(v??"");return /[;"\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};
+function exportCsv(name,head,rows){
+  const txt="\ufeff"+[head,...rows].map(r=>r.map(csvCell).join(";")).join("\r\n");
+  const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([txt],{type:"text/csv;charset=utf-8"}));a.download=name;
+  document.body.append(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1500);
+}
+$("#m-csv").onclick=()=>exportCsv(`metragem-${today()}.csv`,["Data","OS","Equipe","Local/Cliente","Inicial (m)","Final (m)","Utilizada (m)","Observações"],
+  filteredInst().map(r=>[fmtDate(r.data),r.os,teamName(r.equipeId)||r.equipeNome,r.local,fmt(r.inicial),fmt(r.final),fmt(r.inicial-r.final),r.obs]));
+$("#e-csv").onclick=()=>exportCsv(`emendas-fusoes-${today()}.csv`,["Data","Cliente","OS","Tipo","Localização","Observações","Status"],
+  filteredEm().map(r=>[fmtDate(r.data),r.cliente,r.os,r.tipo,r.local,r.obs,r.resolvido?"Resolvido ✓":"Pendente"]));
+
+boot();
+})();
+</script>
+
+</body>
+</html>
