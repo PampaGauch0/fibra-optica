@@ -121,6 +121,9 @@ td.dots{width:36px;padding-right:0}
 .menu button:hover{background:var(--soft)}
 .menu button.danger{color:var(--bad)}
 .menu .meta{font-size:12px;color:var(--muted);padding:6px 10px 8px;border-bottom:1px solid var(--line);margin-bottom:4px}
+.nw{white-space:nowrap}
+.maplink{display:inline-flex;align-items:center;gap:3px;font-weight:600;color:var(--fg);text-decoration:none;border:1px solid var(--line);border-radius:999px;padding:1px 8px;font-size:12px;margin-right:4px}
+.maplink:hover{background:var(--soft)}
 .hist{list-style:none;margin:0;padding:0;display:grid;gap:0}
 .hist li{position:relative;padding:0 0 14px 20px;border-left:2px solid var(--line);margin-left:6px;display:grid;gap:3px}
 .hist li:last-child{border-left-color:transparent}
@@ -154,6 +157,7 @@ html{color-scheme:light}body{margin:0}[hidden]{display:none!important}
   <div class="tabs" role="tablist">
     <button role="tab" id="tab-met" aria-selected="true" data-tab="met">Controle de Metragem</button>
     <button role="tab" id="tab-em" aria-selected="false" data-tab="em">Emendas e Fusões</button>
+    <button role="tab" id="tab-cto" aria-selected="false" data-tab="cto">CTOs</button>
     <button role="tab" id="tab-eq" aria-selected="false" data-tab="eq">Equipes</button>
     <button role="tab" id="tab-ac" aria-selected="false" data-tab="ac" hidden>Acesso</button>
   </div>
@@ -192,7 +196,7 @@ html{color-scheme:light}body{margin:0}[hidden]{display:none!important}
     </div>
     <div class="bar">
       <div class="search"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-        <input id="e-q" class="field" type="search" placeholder="Buscar por cliente, OS ou localização…" aria-label="Buscar emendas"></div>
+        <input id="e-q" class="field" type="search" placeholder="Buscar por cliente, OS, cidade ou endereço…" aria-label="Buscar emendas"></div>
       <select id="e-tipo" class="field" aria-label="Filtrar por tipo"><option value="">Emenda e fusão</option><option>Emenda</option><option>Fusão</option></select>
       <select id="e-st" class="field" aria-label="Filtrar por status"><option value="">Todos os status</option><option value="pend">Pendentes</option><option value="ok">Resolvidos</option></select>
       <div class="datef"><label for="e-de">De</label><input id="e-de" class="field" type="date"><label for="e-ate">Até</label><input id="e-ate" class="field" type="date"></div>
@@ -202,9 +206,34 @@ html{color-scheme:light}body{margin:0}[hidden]{display:none!important}
       <button class="btn primary" id="e-new" type="button"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>Novo registro</button>
     </div>
     <div class="tablebox">
-      <table><thead><tr><th aria-label="Opções"></th><th>Resolvido</th><th>Data</th><th>Cliente</th><th>OS</th><th>Tipo</th><th>Localização</th><th>Observações</th><th></th></tr></thead>
+      <table><thead><tr><th aria-label="Opções"></th><th>Resolvido</th><th>Data</th><th>Cliente</th><th>OS</th><th>Tipo</th><th>Cidade</th><th>Localização</th><th>Observações</th><th></th></tr></thead>
       <tbody id="e-body"></tbody></table>
       <div class="foot"><span id="e-count"></span><span>Clique no quadrado para marcar como resolvido ✓</span></div>
+    </div>
+  </section>
+
+  <!-- CTOs -->
+  <section id="pane-cto" hidden>
+    <div class="stats">
+      <div class="stat"><div class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 10h.01M11 10h.01M15 10h.01M7 14h10"/></svg></div><div><small>CTOs no filtro</small><b class="num" id="c-tot">0</b></div></div>
+      <div class="stat"><div class="ic" style="color:var(--warn)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div><div><small>Pendentes</small><b class="num" id="c-pend">0</b></div></div>
+      <div class="stat"><div class="ic" style="color:var(--ok)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6 9 17l-5-5"/></svg></div><div><small>Resolvidas</small><b class="num" id="c-ok">0</b></div></div>
+    </div>
+    <div class="bar">
+      <div class="search"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        <input id="c-q" class="field" type="search" placeholder="Buscar por ID da CTO, OS, ação ou endereço…" aria-label="Buscar CTOs"></div>
+      <select id="c-cid" class="field" aria-label="Filtrar por cidade"></select>
+      <select id="c-st" class="field" aria-label="Filtrar por status"><option value="">Todos os status</option><option value="pend">Pendentes</option><option value="ok">Resolvidas</option></select>
+      <div class="datef"><label for="c-de">De</label><input id="c-de" class="field" type="date"><label for="c-ate">Até</label><input id="c-ate" class="field" type="date"></div>
+      <button class="btn ghost" id="c-clear" type="button">Limpar</button>
+      <span class="spacer"></span>
+      <button class="btn" id="c-csv" type="button">Exportar planilha</button>
+      <button class="btn primary" id="c-new" type="button"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>Nova CTO</button>
+    </div>
+    <div class="tablebox">
+      <table><thead><tr><th aria-label="Opções"></th><th>Resolvido</th><th>Data</th><th>CTO (IXC)</th><th>Cidade</th><th class="r">Portas</th><th class="r">Sinal</th><th>Ação a ser tomada</th><th>OS</th><th>Local</th><th></th></tr></thead>
+      <tbody id="c-body"></tbody></table>
+      <div class="foot"><span id="c-count"></span><span>CTO lotada ou com sinal alto · clique no quadrado para marcar como resolvida ✓</span></div>
     </div>
   </section>
 
@@ -227,10 +256,14 @@ html{color-scheme:light}body{margin:0}[hidden]{display:none!important}
     <div class="team" style="margin-top:16px"><h3>Importar dados</h3>
       <p class="hint" style="margin:0">Selecione o arquivo dados-importacao.json para trazer os registros da versão anterior. Registros com o mesmo código são substituídos.</p>
       <input type="file" id="ac-file" accept="application/json,.json"></div>
+    <div class="team" style="margin-top:12px"><h3>Atualizar pela planilha do dia a dia</h3>
+      <p class="hint" style="margin:0">No Google Planilhas, abra a planilha <b>CAIXAS MANUTENÇÃO E REDES NOVAS</b> e use <b>Arquivo → Fazer download → Microsoft Excel (.xlsx)</b>. Depois selecione o arquivo aqui. As abas <b>CTO Lotada ou com Sinal Alto</b> e <b>Emenda em Fibra de Cliente</b> são lidas; só as linhas novas são adicionadas, e o que já foi editado no sistema não é sobrescrito.</p>
+      <input type="file" id="ac-xlsx" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"></div>
   </section>
 </main>
 
 <div id="modal-root"></div>
+<datalist id="cidades"></datalist>
 <div id="toast" class="toast" hidden></div>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
@@ -248,8 +281,8 @@ const today=()=>{const d=new Date();d.setMinutes(d.getMinutes()-d.getTimezoneOff
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 function toast(msg){const t=$("#toast");t.textContent=msg;t.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>t.hidden=true,2600)}
 
-const COLS=["equipes","instalacoes","emendas"];
-const S={equipes:[],instalacoes:[],emendas:[],loaded:false,mode:"pending"};
+const COLS=["equipes","instalacoes","emendas","ctos"];
+const S={equipes:[],instalacoes:[],emendas:[],ctos:[],loaded:false,mode:"pending"};
 const DEFAULT_TEAMS=[{id:"eq1",nome:"Antônio e Ruan",membros:"Antônio, Ruan",ativa:true},{id:"eq2",nome:"Airton e Gustavo",membros:"Airton, Gustavo",ativa:true},{id:"eq3",nome:"Suporte: Gabriel",membros:"Gabriel",ativa:true}];
 
 /* ---------- armazenamento ---------- */
@@ -260,7 +293,8 @@ const stamp=()=>({em:Date.now(),por:ME.id||null,email:ME.email||null,nome:ME.nam
 const show=v=>(v===undefined||v===null||v==="")?"—":String(v);
 const FIELDS={
   instalacoes:[["equipeId","Equipe",v=>teamName(v)||show(v)],["os","OS"],["data","Data",fmtDate],["local","Local / Cliente"],["inicial","Metragem inicial",v=>fmt(v)+" m"],["final","Metragem final",v=>fmt(v)+" m"],["obs","Observações"]],
-  emendas:[["cliente","Cliente"],["os","OS"],["data","Data",fmtDate],["tipo","Tipo"],["local","Localização"],["obs","Observações"],["resolvido","Status",v=>v?"Resolvido ✓":"Pendente"]]};
+  emendas:[["cliente","Cliente"],["os","OS"],["data","Data",fmtDate],["tipo","Tipo"],["cidade","Cidade"],["endereco","Endereço"],["local","Localização"],["obs","Observações"],["resolvido","Status",v=>v?"Resolvido ✓":"Pendente"]],
+  ctos:[["data","Data",fmtDate],["ctoId","ID da CTO (IXC)"],["cidade","Cidade"],["local","Localização"],["endereco","Endereço"],["portas","Portas"],["sinal","Sinal (dBm)"],["acao","Ação a ser tomada"],["os","OS"],["obs","Observações"],["resolvido","Status",v=>v?"Resolvida ✓":"Pendente"]]};
 function diff(col,a,b){return FIELDS[col].filter(([k])=>String(a[k]??"")!==String(b[k]??"")).map(([k,l,f])=>({campo:l,de:(f||show)(a[k]),para:(f||show)(b[k])}))}
 function withHist(col,old,neu,acao){
   const h=(old&&Array.isArray(old.historico))?old.historico:[];let ent;
@@ -345,7 +379,7 @@ $("#ac-file").onchange=async e=>{const f=e.target.files[0];if(!f)return;
 let tab="met";
 document.querySelectorAll("[data-tab]").forEach(b=>b.onclick=()=>{tab=b.dataset.tab;
   document.querySelectorAll("[data-tab]").forEach(x=>x.setAttribute("aria-selected",x===b));
-  ["met","em","eq","ac"].forEach(k=>$("#pane-"+k).hidden=k!==tab);
+  ["met","em","cto","eq","ac"].forEach(k=>$("#pane-"+k).hidden=k!==tab);
   try{localStorage.setItem(LS+"-tab",tab)}catch(e){}});
 try{const t=localStorage.getItem(LS+"-tab");if(t&&t!=="met"&&t!=="ac")document.querySelector(`[data-tab="${t}"]`).click()}catch(e){}
 
@@ -369,9 +403,22 @@ function filteredInst(){
 function filteredEm(){
   const q=$("#e-q").value.trim().toLowerCase(),tp=$("#e-tipo").value,st=$("#e-st").value,de=$("#e-de").value,ate=$("#e-ate").value;
   return S.emendas.filter(r=>(!tp||r.tipo===tp)&&(!st||(st==="ok")===!!r.resolvido)&&inRange(r.data||"",de,ate)&&
-    (!q||[r.cliente,r.os,r.local,r.obs].join(" ").toLowerCase().includes(q)))
+    (!q||[r.cliente,r.os,r.local,r.endereco,r.cidade,r.obs].join(" ").toLowerCase().includes(q)))
     .sort((x,y)=>(!!x.resolvido-!!y.resolvido)||(y.data||"").localeCompare(x.data||"")||((y.criadoEm||0)-(x.criadoEm||0)));
 }
+function filteredCto(){
+  const q=$("#c-q").value.trim().toLowerCase(),cid=$("#c-cid").value,st=$("#c-st").value,de=$("#c-de").value,ate=$("#c-ate").value;
+  return S.ctos.filter(r=>(!cid||r.cidade===cid)&&(!st||(st==="ok")===!!r.resolvido)&&inRange(r.data||"",de,ate)&&
+    (!q||[r.ctoId,r.os,r.acao,r.local,r.endereco,r.cidade,r.obs].join(" ").toLowerCase().includes(q)))
+    .sort((x,y)=>(!!x.resolvido-!!y.resolvido)||(y.data||"").localeCompare(x.data||"")||((y.criadoEm||0)-(x.criadoEm||0)));
+}
+/* link de mapa: aceita URL do Google Maps ou coordenadas "lat, lng" */
+function mapUrl(v){v=String(v||"").trim();if(/^https?:\/\//i.test(v))return v;
+  const m=v.match(/^(-?\d{1,2}\.\d+)\s*,\s*(-?\d{1,3}\.\d+)$/);return m?`https://www.google.com/maps?q=${m[1]},${m[2]}`:null}
+function placeCell(r){const u=mapUrl(r.local)||mapUrl(r.endereco);const txt=[r.endereco&&!mapUrl(r.endereco)?r.endereco:"",r.local&&!mapUrl(r.local)?r.local:""].filter(Boolean).join(" · ");
+  return (u?`<a class="maplink" href="${esc(u)}" target="_blank" rel="noopener">${pin} Mapa</a> `:"")+(txt?`<span title="${esc(txt)}">${esc(txt)}</span>`:(u?"":"—"))}
+const titleCase=s=>String(s||"").trim().replace(/\s+/g," ").toLowerCase().replace(/(^|\s)(\S)/g,(a,b,c)=>b+c.toUpperCase()).replace(/\b(De|Da|Do|Dos|Das|E)\b/g,w=>w.toLowerCase());
+const pin='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>';
 const pencil='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.17 6.81a1 1 0 0 0-3.98-3.98L3.84 16.17a2 2 0 0 0-.5.83l-1.32 4.35a.5.5 0 0 0 .62.62l4.35-1.32a2 2 0 0 0 .83-.5Z"/><path d="m15 5 4 4"/></svg>';
 const trash='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>';
 const bubble='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>';
@@ -408,8 +455,8 @@ function render(){
   const em=filteredEm();
   $("#e-tot").textContent=em.length;$("#e-pend").textContent=em.filter(r=>!r.resolvido).length;$("#e-ok").textContent=em.filter(r=>r.resolvido).length;
   $("#e-count").textContent=`${em.length} de ${S.emendas.length} registros`;
-  $("#e-body").innerHTML=loading?'<tr><td colspan="9" class="empty">Carregando registros…</td></tr>':
-    !em.length?`<tr><td colspan="9" class="empty">${S.emendas.length?"Nenhum registro encontrado com esses filtros.":"Nenhuma emenda ou fusão registrada. Clique em <b>Novo registro</b> para começar."}</td></tr>`:
+  $("#e-body").innerHTML=loading?'<tr><td colspan="10" class="empty">Carregando registros…</td></tr>':
+    !em.length?`<tr><td colspan="10" class="empty">${S.emendas.length?"Nenhum registro encontrado com esses filtros.":"Nenhuma emenda ou fusão registrada. Clique em <b>Novo registro</b> para começar."}</td></tr>`:
     em.map(r=>`<tr class="${r.resolvido?"done":""}">
       ${dots("emendas",r)}
       <td><button class="check ${r.resolvido?"on":""}" data-tog="${esc(r.id)}" aria-pressed="${!!r.resolvido}" aria-label="Marcar como resolvido">✓</button></td>
@@ -417,9 +464,32 @@ function render(){
       <td class="cli"><b>${esc(r.cliente)}</b></td>
       <td class="num">${r.os?esc(r.os):"—"}</td>
       <td><span class="chip">${esc(r.tipo)}</span></td>
-      <td class="trunc" title="${esc(r.local)}">${esc(r.local)||"—"}</td>
+      <td>${esc(r.cidade)||"—"}</td>
+      <td class="trunc">${placeCell(r)}</td>
       <td class="trunc" title="${esc(r.obs)}">${esc(r.obs)||"—"}</td>
       <td class="r" style="white-space:nowrap"><span class="chip ${r.resolvido?"ok":"pend"}">${r.resolvido?"Resolvido":"Pendente"}</span><button class="icbtn" data-edit-e="${esc(r.id)}" aria-label="Editar">${pencil}</button></td></tr>`).join("");
+  const allCid=[...new Set(["Sapiranga","Araricá","Nova Hartz","Rolante",...S.ctos.map(r=>r.cidade),...S.emendas.map(r=>r.cidade)].filter(Boolean))].sort();
+  $("#cidades").innerHTML=allCid.map(c=>`<option value="${esc(c)}">`).join("");
+  // ctos
+  const cs=$("#c-cid"),cv=cs.value,cids=[...new Set(S.ctos.map(r=>r.cidade).filter(Boolean))].sort();
+  cs.innerHTML='<option value="">Todas as cidades</option>'+cids.map(c=>`<option ${c===cv?"selected":""}>${esc(c)}</option>`).join("");
+  const ct=filteredCto();
+  $("#c-tot").textContent=ct.length;$("#c-pend").textContent=ct.filter(r=>!r.resolvido).length;$("#c-ok").textContent=ct.filter(r=>r.resolvido).length;
+  $("#c-count").textContent=`${ct.length} de ${S.ctos.length} CTOs`;
+  $("#c-body").innerHTML=loading?'<tr><td colspan="11" class="empty">Carregando CTOs…</td></tr>':
+    !ct.length?`<tr><td colspan="11" class="empty">${S.ctos.length?"Nenhuma CTO encontrada com esses filtros.":"Nenhuma CTO registrada. Clique em <b>Nova CTO</b> ou importe a planilha na aba Acesso."}</td></tr>`:
+    ct.map(r=>`<tr class="${r.resolvido?"done":""}">
+      ${dots("ctos",r)}
+      <td><button class="check ${r.resolvido?"on":""}" data-tog-c="${esc(r.id)}" aria-pressed="${!!r.resolvido}" aria-label="Marcar como resolvida">✓</button></td>
+      <td class="num"><b>${fmtDate(r.data)}</b></td>
+      <td class="num cli"><b>${r.ctoId?esc(r.ctoId):"—"}</b></td>
+      <td class="nw">${esc(r.cidade)||"—"}</td>
+      <td class="r num">${r.portas!==""&&r.portas!=null?esc(r.portas):"—"}</td>
+      <td class="r num nw">${r.sinal!==""&&r.sinal!=null?esc(String(r.sinal).replace(".",","))+" dBm":"—"}</td>
+      <td class="trunc" title="${esc(r.acao)}">${esc(r.acao)||"—"}</td>
+      <td class="num">${r.os?esc(r.os):"—"}</td>
+      <td class="trunc">${placeCell(r)}</td>
+      <td class="r" style="white-space:nowrap"><span class="chip ${r.resolvido?"ok":"pend"}">${r.resolvido?"Resolvida":"Pendente"}</span><button class="icbtn" data-edit-c="${esc(r.id)}" aria-label="Editar">${pencil}</button></td></tr>`).join("");
   // equipes
   $("#t-list").innerHTML=loading?'<p class="hint">Carregando equipes…</p>':!S.equipes.length?'<p class="hint">Nenhuma equipe cadastrada.</p>':
     S.equipes.slice().sort((a,b)=>(b.ativa!==false)-(a.ativa!==false)||a.nome.localeCompare(b.nome)).map(t=>{
@@ -431,7 +501,8 @@ function render(){
       <div class="row"><span>Cabo restante</span><b class="num">${lf?fmt(lf.final)+" m":"—"}</b></div>
       <div class="acts"><button class="btn" data-edit-t="${esc(t.id)}">Editar</button><button class="btn ghost" data-act-t="${esc(t.id)}">${t.ativa===false?"Reativar":"Desativar"}</button>${IS_ADMIN?`<button class="btn ghost" data-del-t="${esc(t.id)}">Excluir</button>`:""}</div></div>`}).join("");
 }
-["#m-q","#m-eq","#m-de","#m-ate","#e-q","#e-tipo","#e-st","#e-de","#e-ate"].forEach(s=>$(s).addEventListener("input",render));
+["#m-q","#m-eq","#m-de","#m-ate","#e-q","#e-tipo","#e-st","#e-de","#e-ate","#c-q","#c-cid","#c-st","#c-de","#c-ate"].forEach(s=>$(s).addEventListener("input",render));
+$("#c-clear").onclick=()=>{["#c-q","#c-de","#c-ate"].forEach(s=>$(s).value="");$("#c-cid").value="";$("#c-st").value="";render()};
 $("#m-clear").onclick=()=>{["#m-q","#m-de","#m-ate"].forEach(s=>$(s).value="");$("#m-eq").value="";render()};
 $("#e-clear").onclick=()=>{["#e-q","#e-de","#e-ate"].forEach(s=>$(s).value="");$("#e-tipo").value="";$("#e-st").value="";render()};
 
@@ -478,7 +549,7 @@ function instForm(rec){
   });
 }
 function emForm(rec){
-  const isNew=!rec;rec=rec||{id:uid(),cliente:"",os:"",data:today(),tipo:"Emenda",local:"",obs:"",resolvido:false};
+  const isNew=!rec;rec=rec||{id:uid(),cliente:"",os:"",data:today(),tipo:"Emenda",local:"",endereco:"",cidade:"",obs:"",resolvido:false};
   modal(`<h2>${isNew?"Novo registro de emenda ou fusão":"Editar registro"}</h2>
   <div class="grid2">
     <div class="f" style="grid-column:1/-1"><label for="x-cli">Nome do cliente</label><input id="x-cli" class="field" value="${esc(rec.cliente)}"></div>
@@ -486,7 +557,9 @@ function emForm(rec){
     <div class="f"><label for="x-data">Data</label><input id="x-data" class="field" type="date" value="${esc(rec.data)}"></div>
     <div class="f"><label>Tipo</label><div class="seg" id="x-tipo">${["Emenda","Fusão"].map(t=>`<button type="button" aria-pressed="${rec.tipo===t}" data-v="${t}">${t}</button>`).join("")}</div></div>
     <div class="f"><label for="x-st">Status</label><select id="x-st" class="field"><option value="0">Pendente</option><option value="1" ${rec.resolvido?"selected":""}>Resolvido ✓</option></select></div>
-    <div class="f" style="grid-column:1/-1"><label for="x-loc">Localização</label><input id="x-loc" class="field" value="${esc(rec.local)}" placeholder="Ex.: poste 14, caixa CTO-07, Rua padre Diogo"></div>
+    <div class="f"><label for="x-end">Endereço</label><input id="x-end" class="field" value="${esc(rec.endereco)}" placeholder="Rua, número"></div>
+    <div class="f"><label for="x-cid">Cidade</label><input id="x-cid" class="field" value="${esc(rec.cidade)}" list="cidades" placeholder="Ex.: Sapiranga"></div>
+    <div class="f" style="grid-column:1/-1"><label for="x-loc">Localização</label><input id="x-loc" class="field" value="${esc(rec.local)}" placeholder="Link do Google Maps, coordenadas ou ponto de referência"></div>
   </div>
   <div class="f"><label for="x-obs">Observações</label><textarea id="x-obs" class="field" placeholder="Detalhes do local e do problema">${esc(rec.obs)}</textarea></div>
   <div class="err-msg" id="x-err" hidden></div>
@@ -496,9 +569,39 @@ function emForm(rec){
     q("#x-cancel").onclick=close;
     q("#x-save").onclick=async()=>{const cli=q("#x-cli").value.trim();if(!cli){const e=q("#x-err");e.textContent="Informe o nome do cliente.";e.hidden=false;return}
       const res=q("#x-st").value==="1";
-      const out={id:rec.id,cliente:cli,os:q("#x-os").value.trim(),data:q("#x-data").value,tipo,local:q("#x-loc").value.trim(),obs:q("#x-obs").value.trim(),resolvido:res,resolvidoEm:res?(rec.resolvidoEm||today()):null,criadoEm:rec.criadoEm||Date.now()};
+      const out={id:rec.id,cliente:cli,os:q("#x-os").value.trim(),data:q("#x-data").value,tipo,local:q("#x-loc").value.trim(),endereco:q("#x-end").value.trim(),cidade:titleCase(q("#x-cid").value),obs:q("#x-obs").value.trim(),resolvido:res,resolvidoEm:res?(rec.resolvidoEm||today()):null,criadoEm:rec.criadoEm||Date.now()};
       const outH=withHist("emendas",isNew?null:rec,out,(!isNew&&out.resolvido!==!!rec.resolvido)?(out.resolvido?"Marcou como resolvido ✓":"Reabriu como pendente"):null);if(!outH){close();toast("Nenhuma alteração para salvar.");return}
       q("#x-save").disabled=true;if(await save("emendas",outH)){close();toast(isNew?"Registro adicionado.":"Registro atualizado.")}else q("#x-save").disabled=false}
+  });
+}
+function ctoForm(rec){
+  const isNew=!rec;rec=rec||{id:uid(),data:today(),ctoId:"",cidade:"",local:"",endereco:"",portas:"",sinal:"",acao:"",os:"",obs:"",resolvido:false};
+  const ACOES=["Ampliar CTO","Ajustar o sinal da CTO","Baixar sinal","Caixa lotada","CTO sem sinal","Ajustar porta com LOS"];
+  modal(`<h2>${isNew?"Nova CTO lotada ou com sinal alto":"Editar CTO"}</h2>
+  <div class="grid2">
+    <div class="f"><label for="k-id">ID da CTO no IXC</label><input id="k-id" class="field num" inputmode="numeric" value="${esc(rec.ctoId)}" placeholder="Ex.: 1686"></div>
+    <div class="f"><label for="k-data">Data</label><input id="k-data" class="field" type="date" value="${esc(rec.data)}"></div>
+    <div class="f"><label for="k-cid">Cidade</label><input id="k-cid" class="field" value="${esc(rec.cidade)}" list="cidades" placeholder="Ex.: Sapiranga"></div>
+    <div class="f"><label for="k-os">ID da OS (se houver)</label><input id="k-os" class="field" value="${esc(rec.os)}"></div>
+    <div class="f"><label for="k-portas">Quantidade de portas</label><select id="k-portas" class="field"><option value="">—</option>${[4,8,16].map(n=>`<option ${String(rec.portas)===String(n)?"selected":""}>${n}</option>`).join("")}</select></div>
+    <div class="f"><label for="k-sinal">Sinal da CTO (dBm)</label><input id="k-sinal" class="field num" inputmode="decimal" value="${esc(String(rec.sinal??"").replace(".",","))}" placeholder="Ex.: -19"></div>
+    <div class="f" style="grid-column:1/-1"><label for="k-acao">Ação a ser tomada</label><input id="k-acao" class="field" value="${esc(rec.acao)}" list="acoes" placeholder="Ex.: Ampliar CTO"></div>
+    <div class="f" style="grid-column:1/-1"><label for="k-loc">Localização</label><input id="k-loc" class="field" value="${esc(rec.local)}" placeholder="Link do Google Maps ou coordenadas (-29.63, -50.55)"></div>
+    <div class="f" style="grid-column:1/-1"><label for="k-end">Endereço da CTO</label><input id="k-end" class="field" value="${esc(rec.endereco)}" placeholder="Rua, número ou referência"></div>
+    <div class="f"><label for="k-st">Status</label><select id="k-st" class="field"><option value="0">Pendente</option><option value="1" ${rec.resolvido?"selected":""}>Resolvida ✓</option></select></div>
+  </div>
+  <datalist id="acoes">${ACOES.map(a=>`<option value="${a}">`).join("")}</datalist>
+  <div class="f"><label for="k-obs">Observações</label><textarea id="k-obs" class="field" placeholder="Opcional">${esc(rec.obs)}</textarea></div>
+  <div class="err-msg" id="k-err" hidden></div>
+  <div class="mact"><button class="btn" id="k-cancel">Cancelar</button><button class="btn primary" id="k-save">${isNew?"Registrar":"Salvar alterações"}</button></div>`,(ov,close)=>{
+    const q=s=>ov.querySelector(s);q("#k-cancel").onclick=close;
+    q("#k-save").onclick=async()=>{const err=q("#k-err");const sv=q("#k-sinal").value.trim();const sinal=sv===""?"":parseNum(sv);
+      const m=!q("#k-id").value.trim()&&!q("#k-loc").value.trim()?"Informe o ID da CTO ou a localização.":(sv!==""&&isNaN(sinal))?"O sinal deve ser um número, por exemplo -19.":"";
+      if(m){err.textContent=m;err.hidden=false;return}
+      const res=q("#k-st").value==="1";
+      const out={id:rec.id,data:q("#k-data").value,ctoId:q("#k-id").value.trim(),cidade:titleCase(q("#k-cid").value),os:q("#k-os").value.trim(),portas:q("#k-portas").value?Number(q("#k-portas").value):"",sinal,acao:q("#k-acao").value.trim(),local:q("#k-loc").value.trim(),endereco:q("#k-end").value.trim(),obs:q("#k-obs").value.trim(),resolvido:res,resolvidoEm:res?(rec.resolvidoEm||today()):null,criadoEm:rec.criadoEm||Date.now(),origem:rec.origem||null};
+      const outH=withHist("ctos",isNew?null:rec,out,(!isNew&&out.resolvido!==!!rec.resolvido)?(out.resolvido?"Marcou como resolvida ✓":"Reabriu como pendente"):null);if(!outH){close();toast("Nenhuma alteração para salvar.");return}
+      q("#k-save").disabled=true;if(await save("ctos",outH)){close();toast(isNew?"CTO registrada.":"CTO atualizada.")}else q("#k-save").disabled=false}
   });
 }
 function teamForm(rec){
@@ -515,7 +618,7 @@ function teamForm(rec){
       q("#t-save").disabled=true;if(await save("equipes",out)){close();toast(isNew?"Equipe adicionada.":"Equipe atualizada.")}else q("#t-save").disabled=false}
   });
 }
-$("#m-new").onclick=()=>instForm();$("#e-new").onclick=()=>emForm();$("#t-new").onclick=()=>teamForm();
+$("#m-new").onclick=()=>instForm();$("#c-new").onclick=()=>ctoForm();$("#e-new").onclick=()=>emForm();$("#t-new").onclick=()=>teamForm();
 
 /* ---------- menu ⋮ e histórico ---------- */
 let menuEl=null;
@@ -533,7 +636,7 @@ function openMenu(btn){const col=btn.dataset.menu,id=btn.dataset.id;const r=S[co
 window.addEventListener("scroll",closeMenu,true);window.addEventListener("resize",closeMenu);
 document.addEventListener("keydown",e=>{if(e.key==="Escape")closeMenu()});
 async function histModal(col,id){const r=S[col].find(x=>x.id===id);if(!r)return;const h=(r.historico||[]).slice().reverse();
-  const title=col==="instalacoes"?`OS ${r.os||"sem número"} · ${fmtDate(r.data)} · ${teamName(r.equipeId)||r.equipeNome||""}`:`${r.cliente}${r.os?" · OS "+r.os:""} · ${fmtDate(r.data)}`;
+  const title=col==="ctos"?`CTO ${r.ctoId||"sem ID"} · ${r.cidade||""} · ${fmtDate(r.data)}`:col==="instalacoes"?`OS ${r.os||"sem número"} · ${fmtDate(r.data)} · ${teamName(r.equipeId)||r.equipeNome||""}`:`${r.cliente}${r.os?" · OS "+r.os:""} · ${fmtDate(r.data)}`;
   modal(`<h2>Histórico de alterações</h2><p class="hint" style="margin:0">${esc(title)}</p>
   <ol class="hist">${h.length?h.map(e=>`<li class="${/resolvido/.test(e.acao)?"ok":""}"><div class="hwho"><b>${esc(whoLabel(e))}</b><span class="num">${esc(fmtDT(e.em))}</span></div><div>${esc(e.acao)}</div>${(e.mudancas||[]).map(m=>`<div class="hchg"><span>${esc(m.campo)}:</span> <s>${esc(m.de)}</s> → <b>${esc(m.para)}</b></div>`).join("")}</li>`).join("")
    :'<li>Nenhuma alteração registrada ainda. Este registro foi criado antes do controle de alterações; as próximas mudanças aparecerão aqui.</li>'}</ol>
@@ -545,13 +648,16 @@ document.addEventListener("click",async e=>{
   if(d.menu){if(b.getAttribute("aria-expanded")==="true")closeMenu();else openMenu(b);return}
   if(d.mact){closeMenu();const col=d.col,r=S[col].find(x=>x.id===d.id);if(!r)return;
     if(d.mact==="hist")histModal(col,r.id);
-    else if(d.mact==="edit")(col==="instalacoes"?instForm:emForm)(r);
+    else if(d.mact==="edit")({instalacoes:instForm,emendas:emForm,ctos:ctoForm})[col](r);
+    else if(col==="ctos")confirmBox(`Excluir a CTO ${r.ctoId||""} de ${fmtDate(r.data)}? O histórico dela também será apagado.`,()=>remove(col,r.id));
     else confirmBox(col==="instalacoes"?`Excluir a instalação de ${fmtDate(r.data)}${r.os?" (OS "+r.os+")":""}? O histórico dela também será apagado.`:`Excluir o registro de ${r.cliente}? O histórico dele também será apagado.`,()=>remove(col,r.id));
     return}
   if(d.editI)instForm(S.instalacoes.find(r=>r.id===d.editI));
   else if(d.delI){const r=S.instalacoes.find(r=>r.id===d.delI);confirmBox(`Excluir a instalação de ${fmtDate(r.data)}${r.os?" (OS "+r.os+")":""}?`,()=>remove("instalacoes",r.id))}
   else if(d.editE)emForm(S.emendas.find(r=>r.id===d.editE));
   else if(d.delE){const r=S.emendas.find(r=>r.id===d.delE);confirmBox(`Excluir o registro de ${r.cliente}?`,()=>remove("emendas",r.id))}
+  else if(d.togC){const r=S.ctos.find(r=>r.id===d.togC);const res=!r.resolvido;if(await save("ctos",withHist("ctos",r,{...r,resolvido:res,resolvidoEm:res?today():null},res?"Marcou como resolvida ✓":"Reabriu como pendente")))toast(res?`CTO ${r.ctoId||""}: marcada como resolvida ✓`:`CTO ${r.ctoId||""}: voltou para pendente`)}
+  else if(d.editC)ctoForm(S.ctos.find(r=>r.id===d.editC));
   else if(d.tog){const r=S.emendas.find(r=>r.id===d.tog);const res=!r.resolvido;if(await save("emendas",withHist("emendas",r,{...r,resolvido:res,resolvidoEm:res?today():null},res?"Marcou como resolvido ✓":"Reabriu como pendente")))toast(res?`${r.cliente}: marcado como resolvido ✓`:`${r.cliente}: voltou para pendente`)}
   else if(d.acDel){const em=d.acDel;confirmBox(`Remover o acesso de ${em}? A pessoa não conseguirá mais entrar.`,()=>fs.collection("acesso").doc(em).delete().catch(x=>toast(failMsg(x))))}
   else if(d.editT)teamForm(S.equipes.find(t=>t.id===d.editT));
@@ -559,6 +665,45 @@ document.addEventListener("click",async e=>{
   else if(d.delT){const t=S.equipes.find(t=>t.id===d.delT);const n=S.instalacoes.filter(r=>r.equipeId===t.id).length;
     confirmBox(n?`A equipe ${t.nome} tem ${n} instalações registradas. Elas continuam no histórico com o nome da equipe. Excluir mesmo assim?`:`Excluir a equipe ${t.nome}?`,()=>remove("equipes",t.id))}
 });
+
+/* ---------- importação da planilha do dia a dia (.xlsx do Google Planilhas) ---------- */
+const normH=s=>String(s||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[?:]/g,"").replace(/\s+/g," ").trim();
+function cellVal(c){let v=c.value;if(v==null)return"";
+  if(v instanceof Date)return v;
+  if(typeof v==="object"){if("result"in v)v=v.result;else if(v.richText)v=v.richText.map(t=>t.text).join("");else if("text"in v)v=typeof v.text==="string"?v.text:(v.text.richText||[]).map(t=>t.text).join("");else if(v.hyperlink)v=v.hyperlink}
+  return v instanceof Date?v:(typeof v==="string"?v.trim():v)}
+function toIso(v){if(v instanceof Date&&!isNaN(v))return v.toISOString().slice(0,10);const m=String(v||"").match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);return m?`${m[3]}-${m[2].padStart(2,"0")}-${m[1].padStart(2,"0")}`:""}
+const toBool=v=>v===true||/^(true|verdadeiro|sim|x|✓|resolvido)$/i.test(String(v).trim());
+const numOr=v=>{if(v===""||v==null)return"";const n=typeof v==="number"?v:parseNum(v);return isNaN(n)?String(v):n};
+function readSheetRows(ws){const head=[];ws.getRow(1).eachCell({includeEmpty:true},(c,i)=>head[i]=normH(cellVal(c)));
+  const col=(...names)=>{for(const n of names){const i=head.findIndex(h=>h&&h.startsWith(n));if(i>0)return i}return -1};
+  const rows=[];ws.eachRow((row,n)=>{if(n===1)return;rows.push({n,get:i=>i>0?cellVal(row.getCell(i)):""})});return{head,col,rows}}
+async function importDailySheet(file){
+  await loadExcelJS();const wb=new ExcelJS.Workbook();await wb.xlsx.load(await file.arrayBuffer());
+  const writes=[];let skip=0;const stampI={...stamp(),acao:"Importou da planilha do dia a dia"};
+  wb.eachSheet(ws=>{const{col,rows}=readSheetRows(ws);
+    if(col("id da cto")>0){const c={data:col("data"),loc:col("localizacao"),end:col("endereco"),cid:col("cidade"),cto:col("id da cto"),portas:col("quantidade de portas"),sinal:col("qual o sinal","sinal"),acao:col("qual a acao","acao"),os:col("id os"),res:col("resolvido"),id:col("id")};
+      rows.forEach(r=>{const local=String(r.get(c.loc)||""),endereco=String(r.get(c.end)||""),ctoId=String(r.get(c.cto)||""),acao=String(r.get(c.acao)||"");
+        if(!local&&!endereco&&!ctoId&&!acao)return;
+        const key="planilha-cto-"+(String(r.get(c.id)||"").replace(/[^\w-]/g,"")||("linha"+r.n));
+        if(S.ctos.some(x=>x.id===key)){skip++;return}
+        const res=toBool(r.get(c.res));
+        writes.push(["ctos",key,{data:toIso(r.get(c.data)),ctoId,cidade:titleCase(r.get(c.cid)),local,endereco:endereco===local?"":endereco,portas:numOr(r.get(c.portas)),sinal:numOr(r.get(c.sinal)),acao:acao.replace(/\s+$/,""),os:String(r.get(c.os)||""),obs:"",resolvido:res,resolvidoEm:res?today():null,criadoEm:Date.now(),origem:"planilha",historico:[stampI]}])})}
+    else if(col("cliente")>0&&col("resolvido")>0){const c={data:col("data"),cli:col("cliente"),loc:col("localizacao"),end:col("endereco"),cid:col("cidade"),os:col("id os"),res:col("resolvido"),obs:col("observacao"),id:col("id")};
+      rows.forEach(r=>{const cliente=String(r.get(c.cli)||""),local=String(r.get(c.loc)||""),endereco=String(r.get(c.end)||"");
+        if(!cliente&&!local&&!endereco)return;
+        const key="planilha-emenda-"+(String(r.get(c.id)||"").replace(/[^\w-]/g,"")||("linha"+r.n));
+        if(S.emendas.some(x=>x.id===key)){skip++;return}
+        const res=toBool(r.get(c.res));
+        writes.push(["emendas",key,{cliente:cliente||"(sem nome)",os:String(r.get(c.os)||""),data:toIso(r.get(c.data)),tipo:"Emenda",local,endereco:endereco===local?"":endereco,cidade:titleCase(r.get(c.cid)),obs:String(r.get(c.obs)||""),resolvido:res,resolvidoEm:res?today():null,criadoEm:Date.now(),origem:"planilha",historico:[stampI]}])})}
+  });
+  for(let i=0;i<writes.length;i+=400){const b=fs.batch();writes.slice(i,i+400).forEach(([c,id,body])=>b.set(fs.collection(c).doc(id),body));await b.commit()}
+  return{added:writes.length,ctos:writes.filter(w=>w[0]==="ctos").length,emendas:writes.filter(w=>w[0]==="emendas").length,skip}}
+$("#ac-xlsx").onchange=async e=>{const f=e.target.files[0];if(!f)return;
+  try{const r=await importDailySheet(f);
+    toast(r.added?`Importado: ${r.ctos} CTOs e ${r.emendas} emendas novas${r.skip?` (${r.skip} já existiam)`:""}.`:(r.skip?`Nada novo: as ${r.skip} linhas já estavam no sistema.`:"Nenhuma linha encontrada nas abas da planilha."))}
+  catch(err){toast(err&&err.code==="permission-denied"?"Sem permissão para importar.":"Não foi possível ler a planilha. Baixe como Microsoft Excel (.xlsx) e tente de novo.")}
+  e.target.value=""};
 
 /* ---------- exportação para planilha Excel (.xlsx) ---------- */
 let xlLoading=null;
@@ -577,7 +722,7 @@ function styleSheet(ws,widths,title,sub){
 }
 const thin={style:"thin",color:{argb:"FFE6E6E3"}};const border={top:thin,bottom:thin,left:thin,right:thin};
 async function exportXlsx(){
-  const btns=[$("#m-csv"),$("#e-csv")];btns.forEach(b=>{b.disabled=true;b.dataset.t=b.textContent;b.textContent="Gerando…"});
+  const btns=[$("#m-csv"),$("#e-csv"),$("#c-csv")];btns.forEach(b=>{b.disabled=true;b.dataset.t=b.textContent;b.textContent="Gerando…"});
   try{
     await loadExcelJS();
     const wb=new ExcelJS.Workbook();wb.creator=ME.email||"Gestão de Fibra Óptica";wb.created=new Date();
@@ -601,20 +746,33 @@ async function exportXlsx(){
 
     /* aba 2: emendas e fusões */
     const em=filteredEm();const w2=wb.addWorksheet("Emendas e Fusões");
-    w2.getRow(4).values=["Status","Data","Cliente","OS","Tipo","Localização","Observações","Resolvido em","Última alteração por","Última alteração em"];
-    styleSheet(w2,[14,12,26,10,10,40,40,14,28,18],"Controle de Emendas e Fusões",`Gerado em ${fmtDT(Date.now())} por ${ME.email||"—"}`);
+    w2.getRow(4).values=["Status","Data","Cliente","OS","Tipo","Cidade","Endereço","Localização","Observações","Resolvido em","Última alteração por","Última alteração em"];
+    styleSheet(w2,[14,12,26,10,10,16,30,40,40,14,28,18],"Controle de Emendas e Fusões",`Gerado em ${fmtDT(Date.now())} por ${ME.email||"—"}`);
     em.forEach((r,k)=>{const n=5+k;const[por,quando]=lastEdit(r);const row=w2.getRow(n);
-      row.values=[r.resolvido?"✓ Resolvido":"Pendente",xlDate(r.data),r.cliente||"",r.os||"",r.tipo||"",r.local||"",r.obs||"",xlDate(r.resolvidoEm),por,quando];
+      row.values=[r.resolvido?"✓ Resolvido":"Pendente",xlDate(r.data),r.cliente||"",r.os||"",r.tipo||"",r.cidade||"",r.endereco||"",r.local||"",r.obs||"",xlDate(r.resolvidoEm),por,quando];
       row.getCell(1).fill={type:"pattern",pattern:"solid",fgColor:{argb:r.resolvido?"FFE5F4EA":"FFFBF0DD"}};
       row.getCell(1).font={bold:true,color:{argb:r.resolvido?"FF1F8A4C":"FFA15C07"}};
-      [2,8].forEach(c=>row.getCell(c).numFmt="dd/mm/yyyy");row.getCell(10).numFmt="dd/mm/yyyy hh:mm";
-      [6,7].forEach(c=>row.getCell(c).alignment={wrapText:true,vertical:"top"});
-      for(let c=1;c<=10;c++)row.getCell(c).border=border});
+      [2,10].forEach(c=>row.getCell(c).numFmt="dd/mm/yyyy");row.getCell(12).numFmt="dd/mm/yyyy hh:mm";
+      [7,8,9].forEach(c=>row.getCell(c).alignment={wrapText:true,vertical:"top"});
+      for(let c=1;c<=12;c++)row.getCell(c).border=border});
     const last2=4+em.length;
-    w2.autoFilter={from:{row:4,column:1},to:{row:Math.max(4,last2),column:10}};
+    w2.autoFilter={from:{row:4,column:1},to:{row:Math.max(4,last2),column:12}};
     if(em.length){const n=last2+2;w2.getCell(n,1).value="Pendentes";w2.getCell(n,2).value={formula:`COUNTIF(A5:A${last2},"Pendente")`,result:em.filter(r=>!r.resolvido).length};
       w2.getCell(n+1,1).value="Resolvidos";w2.getCell(n+1,2).value={formula:`COUNTIF(A5:A${last2},"✓ Resolvido")`,result:em.filter(r=>r.resolvido).length};
       [n,n+1].forEach(x=>w2.getRow(x).font={bold:true})}
+
+    /* aba: CTOs */
+    const ct=filteredCto();const wc=wb.addWorksheet("CTO Lotada ou Sinal Alto");
+    wc.getRow(4).values=["Status","Data","ID da CTO (IXC)","Cidade","Portas","Sinal (dBm)","Ação a ser tomada","ID OS","Localização","Endereço","Observações","Resolvida em","Última alteração por","Última alteração em"];
+    styleSheet(wc,[14,12,14,16,9,12,34,10,40,30,30,14,28,18],"CTO Lotada ou com Sinal Alto",`Gerado em ${fmtDT(Date.now())} por ${ME.email||"—"}`);
+    ct.forEach((r,k)=>{const n=5+k;const[por,quando]=lastEdit(r);const row=wc.getRow(n);const u=mapUrl(r.local);
+      row.values=[r.resolvido?"✓ Resolvida":"Pendente",xlDate(r.data),r.ctoId&&/^\d+$/.test(r.ctoId)?Number(r.ctoId):(r.ctoId||""),r.cidade||"",r.portas===""?null:r.portas,r.sinal===""?null:r.sinal,r.acao||"",r.os||"",u?{text:r.local,hyperlink:u}:(r.local||""),r.endereco||"",r.obs||"",xlDate(r.resolvidoEm),por,quando];
+      row.getCell(1).fill={type:"pattern",pattern:"solid",fgColor:{argb:r.resolvido?"FFE5F4EA":"FFFBF0DD"}};
+      row.getCell(1).font={bold:true,color:{argb:r.resolvido?"FF1F8A4C":"FFA15C07"}};
+      if(u)row.getCell(9).font={color:{argb:"FF1A56DB"},underline:true};
+      [2,12].forEach(c=>row.getCell(c).numFmt="dd/mm/yyyy");row.getCell(14).numFmt="dd/mm/yyyy hh:mm";
+      for(let c=1;c<=14;c++)row.getCell(c).border=border});
+    const lastC=4+ct.length;wc.autoFilter={from:{row:4,column:1},to:{row:Math.max(4,lastC),column:14}};
 
     /* aba 3: resumo por equipe */
     const w3=wb.addWorksheet("Resumo por Equipe");
@@ -633,7 +791,7 @@ async function exportXlsx(){
   }catch(e){toast("Não foi possível gerar a planilha. Verifique a internet e tente de novo.")}
   finally{btns.forEach(b=>{b.disabled=false;b.textContent=b.dataset.t})}
 }
-$("#m-csv").onclick=exportXlsx;$("#e-csv").onclick=exportXlsx;
+$("#m-csv").onclick=exportXlsx;$("#e-csv").onclick=exportXlsx;$("#c-csv").onclick=exportXlsx;
 
 boot();
 })();
