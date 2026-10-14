@@ -4,6 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#17181a">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Fibra Óptica">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-192.png">
 <title>Gestão de Fibra Óptica</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&display=swap">
@@ -134,6 +140,67 @@ td.dots{width:36px;padding-right:0}
 .hchg{font-size:13px;background:var(--soft);border-radius:6px;padding:4px 8px}
 .hchg span{color:var(--muted)}
 .hchg s{color:var(--muted)}
+
+/* ===== versão celular: ativa com html.m (automática em telas até 760px, ou escolhida no botão do topo) ===== */
+.viewtoggle{height:28px;font-size:12px;padding:0 8px}
+html.m body{font-size:15px}
+html.m .brand{padding-block:12px;gap:10px}
+html.m .brand p{display:none}
+html.m .brand h1{font-size:17px}
+html.m .logo{width:34px;height:34px}
+html.m .who{order:3;margin-left:0;width:100%;justify-content:space-between}
+html.m .who span{max-width:none;flex:1}
+html.m .who .btn{height:32px;font-size:13px}
+html.m main{padding-block:12px 110px}
+html.m .tabs{display:flex;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;width:100%;-webkit-overflow-scrolling:touch}
+html.m .tabs::-webkit-scrollbar{display:none}
+html.m .tabs button{flex:none;padding:9px 14px;font-size:14px}
+html.m .stats{grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+html.m .stat{padding:10px;gap:0;flex-direction:column;align-items:flex-start}
+html.m .stat .ic{display:none}
+html.m .stat small{font-size:11px;line-height:1.2}
+html.m .stat b{font-size:17px}
+html.m .bar{gap:8px;margin-top:12px}
+html.m .search{flex:1 1 100%}
+html.m .bar select.field{flex:1 1 calc(50% - 4px)}
+html.m .datef{flex:1 1 100%;display:grid;grid-template-columns:auto 1fr auto 1fr;gap:6px}
+html.m .datef .field{width:100%}
+html.m .field,html.m .btn{height:42px;font-size:16px}
+html.m .spacer{display:none}
+html.m .bar .btn.ghost{flex:1 1 calc(50% - 4px);border-color:var(--line);justify-content:center}
+html.m .bar .btn:not(.primary):not(.ghost){flex:1 1 calc(50% - 4px);justify-content:center}
+html.m .bar .btn.primary{position:fixed;right:16px;bottom:calc(18px + env(safe-area-inset-bottom,0px));z-index:6;height:54px;border-radius:999px;padding:0 20px;box-shadow:0 6px 20px rgb(0 0 0/.25);font-size:15px}
+/* tabelas viram cartões */
+html.m .tablebox{background:none;border:0;overflow:visible;margin-top:12px}
+html.m .tablebox table{min-width:0!important;display:block}
+html.m .tablebox thead{display:none}
+html.m .tablebox tbody{display:grid;gap:10px}
+html.m .tablebox tr{display:grid;grid-template-columns:1fr 1fr;gap:8px 14px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 44px 12px 14px;position:relative}
+html.m .tablebox tr.done{background:var(--ok-soft);border-color:color-mix(in srgb,var(--ok) 35%,var(--line))}
+html.m .tablebox td{display:block;padding:0;border:0;background:none!important;min-width:0;text-align:left}
+html.m .tablebox td::before{content:attr(data-label);display:block;font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin-bottom:1px}
+html.m .tablebox td[data-label=""]::before,html.m .tablebox td.empty::before{display:none}
+html.m .tablebox td.trunc{max-width:none;white-space:normal;overflow:visible;grid-column:1/-1;word-break:break-word}
+html.m .tablebox td.dots{position:absolute;top:8px;right:6px;width:auto}
+html.m .dotbtn{width:36px;height:36px;font-size:20px}
+html.m .tablebox td:last-child:not(.empty){grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;gap:8px;border-top:1px solid var(--line);padding-top:8px;margin-top:2px}
+html.m .tablebox td.empty{grid-column:1/-1;padding:24px 8px}
+html.m .tablebox tr:has(td.empty){padding:14px;display:block}
+html.m .check{width:40px;height:40px;font-size:20px;border-radius:10px}
+html.m .icbtn{padding:10px}
+html.m .maplink{padding:6px 12px;font-size:14px}
+html.m .foot{border:0;padding:12px 2px;flex-direction:column;gap:2px}
+html.m .teams{grid-template-columns:1fr}
+/* formulários como folha inferior */
+html.m .overlay{place-items:end stretch;padding:0}
+html.m .modal{width:100%;max-height:92vh;border-radius:18px 18px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom,0px))}
+html.m .grid2{grid-template-columns:1fr}
+html.m .mact{position:sticky;bottom:calc(-18px - env(safe-area-inset-bottom,0px));background:var(--surface);padding-block:10px;margin-bottom:-4px}
+html.m .mact .btn{flex:1;justify-content:center;height:48px}
+html.m .seg button{height:42px;flex:1}html.m .seg{display:flex}
+html.m .menu{left:8px!important;right:8px;min-width:0}
+html.m .menu button{padding:14px 12px;font-size:16px}
+html.m .toast{bottom:calc(84px + env(safe-area-inset-bottom,0px));max-width:calc(100% - 32px)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 html{color-scheme:light}body{margin:0}[hidden]{display:none!important}
 </style>
@@ -144,6 +211,7 @@ html{color-scheme:light}body{margin:0}[hidden]{display:none!important}
   <div class="logo" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9a2 2 0 0 1-2-2V5h6v2a2 2 0 0 1-2 2Z"/><path d="M3 5V3M7 5V3"/><path d="M5 9v8.5a3.5 3.5 0 0 0 7 0v-11a3.5 3.5 0 0 1 7 0V15"/><path d="M17 15h4v2a2 2 0 0 1-4 0Z"/><path d="M19 21v-2"/></svg></div>
   <div><h1>Gestão de Fibra Óptica</h1><p>Controle de metragem por instalação e acompanhamento de emendas e fusões</p></div>
   <div class="who" id="who" hidden></div>
+  <button class="btn ghost viewtoggle" id="view-toggle" type="button" title="Alternar entre a versão de celular e a de computador"></button>
 </div></header>
 
 <div id="gate" class="gate"><div class="gatebox">
@@ -321,7 +389,7 @@ function showWho(u){const w=$("#who");w.innerHTML="";
   if(u.photoURL){const img=document.createElement("img");img.src=u.photoURL;img.alt="";img.referrerPolicy="no-referrer";w.append(img)}
   const sp=document.createElement("span");sp.textContent=u.email;sp.title="Suas alterações ficam registradas com este e-mail";
   const out=document.createElement("button");out.className="btn ghost";out.type="button";out.textContent="Sair";out.onclick=()=>auth.signOut();
-  w.append(sp,out);w.hidden=false}
+  w.append(sp,$("#view-toggle"),out);w.hidden=false}
 function openApp(){
   $("#gate").hidden=true;$("#app").hidden=false;$("#tab-ac").hidden=!IS_ADMIN;
   COLS.forEach(col=>unsubs.push(fs.collection(col).onSnapshot(snap=>{
@@ -357,7 +425,7 @@ $("#g-out").onclick=()=>auth.signOut();
 /* ---------- acesso (administrador) ---------- */
 function renderAcesso(){const rows=(S.acesso||[]).slice().sort((a,b)=>a.id.localeCompare(b.id));
   $("#ac-body").innerHTML=rows.length?rows.map(r=>`<tr><td><b>${esc(r.id)}</b></td><td>${esc(r.nome||"—")}</td><td class="num dim">${r.liberadoEm?esc(fmtDT(r.liberadoEm)):"—"}</td><td class="dim">${esc(r.liberadoPor||"—")}</td><td class="r"><button class="btn ghost" data-ac-del="${esc(r.id)}">Remover</button></td></tr>`).join("")
-   :'<tr><td colspan="5" class="empty">Nenhum e-mail liberado ainda. Adicione o e-mail de cada funcionário acima.</td></tr>'}
+   :'<tr><td colspan="5" class="empty">Nenhum e-mail liberado ainda. Adicione o e-mail de cada funcionário acima.</td></tr>';labelCells()}
 $("#ac-add").onclick=()=>{const em=$("#ac-email").value.trim().toLowerCase();
   if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)){toast("Digite um e-mail válido.");return}
   fs.collection("acesso").doc(em).set({nome:$("#ac-nome").value.trim(),liberadoEm:Date.now(),liberadoPor:ME.email}).catch(e=>toast(failMsg(e)));
@@ -374,6 +442,19 @@ $("#ac-file").onchange=async e=>{const f=e.target.files[0];if(!f)return;
     toast(list.length+" registros importados.")}
   catch(err){toast(err.code==="permission-denied"?"Sem permissão para importar.":"Arquivo inválido.")}
   e.target.value=""};
+
+/* ---------- versão celular x computador ---------- */
+const MQ=window.matchMedia("(max-width: 760px)");
+function viewPref(){try{return localStorage.getItem(LS+"-view")}catch(e){return null}}
+function applyView(){const pref=viewPref();const mobile=pref?pref==="m":MQ.matches;
+  document.documentElement.classList.toggle("m",mobile);
+  $("#view-toggle").textContent=mobile?"Versão computador":"Versão celular"}
+$("#view-toggle").onclick=()=>{const now=document.documentElement.classList.contains("m");const next=now?"d":"m";
+  try{const auto=MQ.matches?"m":"d";if(next===auto)localStorage.removeItem(LS+"-view");else localStorage.setItem(LS+"-view",next)}catch(e){}applyView()};
+(MQ.addEventListener?MQ.addEventListener("change",applyView):MQ.addListener(applyView));applyView();
+/* rótulos das colunas em cada célula (usados nos cartões do celular) */
+function labelCells(){document.querySelectorAll(".tablebox table").forEach(t=>{const hs=[...t.querySelectorAll("thead th")].map(th=>th.textContent.trim());
+  t.querySelectorAll("tbody tr").forEach(tr=>[...tr.children].forEach((td,i)=>td.setAttribute("data-label",td.classList.contains("empty")?"":(hs[i]||""))))})}
 
 /* ---------- abas ---------- */
 let tab="met";
@@ -500,6 +581,7 @@ function render(){
       <div class="row"><span>Metragem utilizada</span><b class="num">${fmt(used)} m</b></div>
       <div class="row"><span>Cabo restante</span><b class="num">${lf?fmt(lf.final)+" m":"—"}</b></div>
       <div class="acts"><button class="btn" data-edit-t="${esc(t.id)}">Editar</button><button class="btn ghost" data-act-t="${esc(t.id)}">${t.ativa===false?"Reativar":"Desativar"}</button>${IS_ADMIN?`<button class="btn ghost" data-del-t="${esc(t.id)}">Excluir</button>`:""}</div></div>`}).join("");
+  labelCells();
 }
 ["#m-q","#m-eq","#m-de","#m-ate","#e-q","#e-tipo","#e-st","#e-de","#e-ate","#c-q","#c-cid","#c-st","#c-de","#c-ate"].forEach(s=>$(s).addEventListener("input",render));
 $("#c-clear").onclick=()=>{["#c-q","#c-de","#c-ate"].forEach(s=>$(s).value="");$("#c-cid").value="";$("#c-st").value="";render()};
