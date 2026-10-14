@@ -173,7 +173,7 @@ html{color-scheme:light}body{margin:0}[hidden]{display:none!important}
       <div class="datef"><label for="m-de">De</label><input id="m-de" class="field" type="date"><label for="m-ate">Até</label><input id="m-ate" class="field" type="date"></div>
       <button class="btn ghost" id="m-clear" type="button">Limpar</button>
       <span class="spacer"></span>
-      <button class="btn" id="m-csv" type="button">Exportar CSV</button>
+      <button class="btn" id="m-csv" type="button">Exportar planilha</button>
       <button class="btn primary" id="m-new" type="button"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>Nova instalação</button>
     </div>
     <div class="tablebox">
@@ -198,7 +198,7 @@ html{color-scheme:light}body{margin:0}[hidden]{display:none!important}
       <div class="datef"><label for="e-de">De</label><input id="e-de" class="field" type="date"><label for="e-ate">Até</label><input id="e-ate" class="field" type="date"></div>
       <button class="btn ghost" id="e-clear" type="button">Limpar</button>
       <span class="spacer"></span>
-      <button class="btn" id="e-csv" type="button">Exportar CSV</button>
+      <button class="btn" id="e-csv" type="button">Exportar planilha</button>
       <button class="btn primary" id="e-new" type="button"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>Novo registro</button>
     </div>
     <div class="tablebox">
@@ -242,7 +242,7 @@ html{color-scheme:light}body{margin:0}[hidden]{display:none!important}
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const fmt=n=>(Number(n)||0).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2});
-const parseNum=v=>{v=String(v??"").trim().replace(/\s|m$/gi,"");if(!v)return NaN;if(v.includes(","))v=v.replace(/\./g,"").replace(",",".");return Number(v)};
+const parseNum=v=>{v=String(v??"").trim().replace(/\s|m$/gi,"");if(!v)return NaN;if(v.includes(","))v=v.replace(/\./g,"").replace(",",".");else if(/^\d{1,3}(\.\d{3})+$/.test(v))v=v.replace(/\./g,"");return Number(v)};
 const fmtDate=iso=>{if(!iso)return"—";const[y,m,d]=iso.split("-");return`${d}/${m}/${y.slice(2)}`};
 const today=()=>{const d=new Date();d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().slice(0,10)};
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
@@ -560,17 +560,80 @@ document.addEventListener("click",async e=>{
     confirmBox(n?`A equipe ${t.nome} tem ${n} instalações registradas. Elas continuam no histórico com o nome da equipe. Excluir mesmo assim?`:`Excluir a equipe ${t.nome}?`,()=>remove("equipes",t.id))}
 });
 
-/* ---------- exportação CSV ---------- */
-const csvCell=v=>{v=String(v??"");return /[;"\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};
-function exportCsv(name,head,rows){
-  const txt="\ufeff"+[head,...rows].map(r=>r.map(csvCell).join(";")).join("\r\n");
-  const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([txt],{type:"text/csv;charset=utf-8"}));a.download=name;
-  document.body.append(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1500);
+/* ---------- exportação para planilha Excel (.xlsx) ---------- */
+let xlLoading=null;
+function loadExcelJS(){if(window.ExcelJS)return Promise.resolve();
+  return xlLoading||(xlLoading=new Promise((ok,err)=>{const sc=document.createElement("script");
+    sc.src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js";sc.onload=ok;sc.onerror=()=>{xlLoading=null;err()};document.head.append(sc)}))}
+const xlDate=iso=>{if(!iso)return null;const[y,m,d]=iso.split("-").map(Number);return new Date(Date.UTC(y,m-1,d))};
+const lastEdit=r=>{const h=r.historico||[];const l=h[h.length-1];return l?[l.email||l.nome||"",new Date(l.em-new Date(l.em).getTimezoneOffset()*60000)]:["",null]};
+function styleSheet(ws,widths,title,sub){
+  ws.columns=widths.map(w=>({width:w}));
+  ws.mergeCells(1,1,1,widths.length);ws.getCell(1,1).value=title;ws.getCell(1,1).font={bold:true,size:14};
+  ws.mergeCells(2,1,2,widths.length);ws.getCell(2,1).value=sub;ws.getCell(2,1).font={italic:true,size:9,color:{argb:"FF6B6E74"}};
+  const hr=ws.getRow(4);hr.font={bold:true,color:{argb:"FFFFFFFF"}};hr.height=20;
+  hr.eachCell(c=>{c.fill={type:"pattern",pattern:"solid",fgColor:{argb:"FF17181A"}};c.alignment={vertical:"middle",wrapText:true}});
+  ws.views=[{state:"frozen",ySplit:4}];
 }
-$("#m-csv").onclick=()=>exportCsv(`metragem-${today()}.csv`,["Data","OS","Equipe","Local/Cliente","Inicial (m)","Final (m)","Utilizada (m)","Observações"],
-  filteredInst().map(r=>[fmtDate(r.data),r.os,teamName(r.equipeId)||r.equipeNome,r.local,fmt(r.inicial),fmt(r.final),fmt(r.inicial-r.final),r.obs]));
-$("#e-csv").onclick=()=>exportCsv(`emendas-fusoes-${today()}.csv`,["Data","Cliente","OS","Tipo","Localização","Observações","Status"],
-  filteredEm().map(r=>[fmtDate(r.data),r.cliente,r.os,r.tipo,r.local,r.obs,r.resolvido?"Resolvido ✓":"Pendente"]));
+const thin={style:"thin",color:{argb:"FFE6E6E3"}};const border={top:thin,bottom:thin,left:thin,right:thin};
+async function exportXlsx(){
+  const btns=[$("#m-csv"),$("#e-csv")];btns.forEach(b=>{b.disabled=true;b.dataset.t=b.textContent;b.textContent="Gerando…"});
+  try{
+    await loadExcelJS();
+    const wb=new ExcelJS.Workbook();wb.creator=ME.email||"Gestão de Fibra Óptica";wb.created=new Date();
+    const filtros=[];const mq=$("#m-q").value.trim(),meq=$("#m-eq").value,mde=$("#m-de").value,mate=$("#m-ate").value;
+    if(meq)filtros.push("equipe "+(teamName(meq)||""));if(mde||mate)filtros.push("período "+(mde?fmtDate(mde):"início")+" a "+(mate?fmtDate(mate):"hoje"));if(mq)filtros.push('busca "'+mq+'"');
+    const sub=`Gerado em ${fmtDT(Date.now())} por ${ME.email||"—"}`+(filtros.length?` · Filtros: ${filtros.join(", ")}`:"");
+
+    /* aba 1: metragem */
+    const ins=filteredInst();const w1=wb.addWorksheet("Controle de Metragem");
+    w1.getRow(4).values=["Data","OS","Equipe","Local / Cliente","Metragem inicial (m)","Metragem final (m)","Metragem utilizada (m)","Observações","Última alteração por","Última alteração em"];
+    styleSheet(w1,[12,10,22,40,16,16,18,34,28,18],"Controle de Metragem",sub);
+    ins.forEach((r,k)=>{const n=5+k;const[por,em]=lastEdit(r);
+      w1.getRow(n).values=[xlDate(r.data),r.os||"",teamName(r.equipeId)||r.equipeNome||"",r.local||"",Number(r.inicial),Number(r.final),{formula:`E${n}-F${n}`,result:Number(r.inicial)-Number(r.final)},r.obs||"",por,em]});
+    const last1=4+ins.length,tot1=last1+1;
+    if(ins.length){w1.getRow(tot1).values=["Total","","","",null,null,{formula:`SUBTOTAL(9,G5:G${last1})`,result:ins.reduce((s,r)=>s+(r.inicial-r.final),0)}];
+      w1.getRow(tot1).font={bold:true};w1.getRow(tot1).eachCell(c=>c.fill={type:"pattern",pattern:"solid",fgColor:{argb:"FFF1F1EF"}})}
+    for(let n=5;n<=Math.max(last1,tot1);n++){const row=w1.getRow(n);
+      row.getCell(1).numFmt="dd/mm/yyyy";row.getCell(10).numFmt="dd/mm/yyyy hh:mm";[5,6,7].forEach(c=>row.getCell(c).numFmt='#,##0.00');row.getCell(7).font={bold:true};
+      for(let c=1;c<=10;c++)row.getCell(c).border=border}
+    w1.autoFilter={from:{row:4,column:1},to:{row:Math.max(4,last1),column:10}};
+
+    /* aba 2: emendas e fusões */
+    const em=filteredEm();const w2=wb.addWorksheet("Emendas e Fusões");
+    w2.getRow(4).values=["Status","Data","Cliente","OS","Tipo","Localização","Observações","Resolvido em","Última alteração por","Última alteração em"];
+    styleSheet(w2,[14,12,26,10,10,40,40,14,28,18],"Controle de Emendas e Fusões",`Gerado em ${fmtDT(Date.now())} por ${ME.email||"—"}`);
+    em.forEach((r,k)=>{const n=5+k;const[por,quando]=lastEdit(r);const row=w2.getRow(n);
+      row.values=[r.resolvido?"✓ Resolvido":"Pendente",xlDate(r.data),r.cliente||"",r.os||"",r.tipo||"",r.local||"",r.obs||"",xlDate(r.resolvidoEm),por,quando];
+      row.getCell(1).fill={type:"pattern",pattern:"solid",fgColor:{argb:r.resolvido?"FFE5F4EA":"FFFBF0DD"}};
+      row.getCell(1).font={bold:true,color:{argb:r.resolvido?"FF1F8A4C":"FFA15C07"}};
+      [2,8].forEach(c=>row.getCell(c).numFmt="dd/mm/yyyy");row.getCell(10).numFmt="dd/mm/yyyy hh:mm";
+      [6,7].forEach(c=>row.getCell(c).alignment={wrapText:true,vertical:"top"});
+      for(let c=1;c<=10;c++)row.getCell(c).border=border});
+    const last2=4+em.length;
+    w2.autoFilter={from:{row:4,column:1},to:{row:Math.max(4,last2),column:10}};
+    if(em.length){const n=last2+2;w2.getCell(n,1).value="Pendentes";w2.getCell(n,2).value={formula:`COUNTIF(A5:A${last2},"Pendente")`,result:em.filter(r=>!r.resolvido).length};
+      w2.getCell(n+1,1).value="Resolvidos";w2.getCell(n+1,2).value={formula:`COUNTIF(A5:A${last2},"✓ Resolvido")`,result:em.filter(r=>r.resolvido).length};
+      [n,n+1].forEach(x=>w2.getRow(x).font={bold:true})}
+
+    /* aba 3: resumo por equipe */
+    const w3=wb.addWorksheet("Resumo por Equipe");
+    w3.getRow(4).values=["Equipe","Funcionários","Instalações","Metragem utilizada (m)","Cabo restante (m)"];
+    styleSheet(w3,[26,30,14,22,18],"Resumo por Equipe","Calculado a partir da aba Controle de Metragem (mesmos filtros)");
+    const teams=S.equipes.slice().sort((a,b)=>a.nome.localeCompare(b.nome));
+    teams.forEach((t,k)=>{const n=5+k;const rs=ins.filter(r=>r.equipeId===t.id);const lf=lastFinal(t.id);
+      w3.getRow(n).values=[t.nome,t.membros||"",{formula:`COUNTIF('Controle de Metragem'!C5:C${Math.max(5,last1)},A${n})`,result:rs.length},
+        {formula:`SUMIF('Controle de Metragem'!C5:C${Math.max(5,last1)},A${n},'Controle de Metragem'!G5:G${Math.max(5,last1)})`,result:rs.reduce((s,r)=>s+(r.inicial-r.final),0)},lf?Number(lf.final):null];
+      [4,5].forEach(c=>w3.getRow(n).getCell(c).numFmt='#,##0.00');for(let c=1;c<=5;c++)w3.getRow(n).getCell(c).border=border});
+
+    const buf=await wb.xlsx.writeBuffer();
+    const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([buf],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"}));
+    a.download=`fibra-optica-${today()}.xlsx`;document.body.append(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1500);
+    toast("Planilha gerada.");
+  }catch(e){toast("Não foi possível gerar a planilha. Verifique a internet e tente de novo.")}
+  finally{btns.forEach(b=>{b.disabled=false;b.textContent=b.dataset.t})}
+}
+$("#m-csv").onclick=exportXlsx;$("#e-csv").onclick=exportXlsx;
 
 boot();
 })();
