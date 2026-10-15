@@ -450,7 +450,8 @@ function openApp(){
   cols.forEach(col=>unsubs.push(fs.collection(col).onSnapshot(snap=>{
     S[col]=snap.docs.map(d=>({id:d.id,...d.data()}));S["_"+col]=1;
     if(cols.every(c=>S["_"+c]))S.loaded=true;render()
-  },e=>toast(e.code==="permission-denied"?"Sem permissão para ver os dados.":"Erro ao carregar os dados."))));
+  },e=>{S["_"+col]=1;S.bloq=S.bloq||{};S.bloq[col]=1;if(cols.every(c=>S["_"+c]))S.loaded=true;render();
+    toast(e.code==="permission-denied"?`Sem permissão para ver os dados de ${Object.values(SETORES).find(v=>v.cols.includes(col))?.nome||col}. Fale com o administrador.`:"Erro ao carregar os dados.")})));
   if(IS_ADMIN)unsubs.push(fs.collection("acesso").onSnapshot(sn=>{S.acesso=sn.docs.map(d=>({id:d.id,...d.data()}));renderAcesso()},()=>{}));
 }
 function boot(){
@@ -460,7 +461,7 @@ function boot(){
   fs.enablePersistence({synchronizeTabs:true}).catch(()=>{});
   auth.getRedirectResult().catch(e=>gate(loginErr(e),true));
   auth.onAuthStateChanged(async u=>{
-    unsubs.splice(0).forEach(f=>f());S.loaded=false;COLS.forEach(c=>{S[c]=[];delete S["_"+c]});S.acesso=[];
+    unsubs.splice(0).forEach(f=>f());S.loaded=false;S.bloq={};COLS.forEach(c=>{S[c]=[];delete S["_"+c]});S.acesso=[];
     if(!u){$("#who").hidden=true;gate("Entre com sua conta Google para acessar o sistema.",true);return}
     ME={id:u.uid,email:u.email,name:u.displayName||""};const em=(u.email||"").toLowerCase();
     IS_ADMIN=(window.ADMIN_EMAILS||[]).map(x=>String(x).toLowerCase()).includes(em);
@@ -667,6 +668,7 @@ function render(){
   $("#f-tot").textContent=fi.length;$("#f-pend").textContent=fi.filter(r=>!r.resolvido).length;$("#f-ok").textContent=fi.filter(r=>r.resolvido).length;
   $("#f-count").textContent=`${fi.length} de ${S.infra.length} registros`;
   $("#f-body").innerHTML=loading?'<tr><td colspan="9" class="empty">Carregando registros…</td></tr>':
+    (S.bloq&&S.bloq.infra)?'<tr><td colspan="9" class="empty">Sem permissão no banco para a aba Infra. As regras do Firebase precisam ser atualizadas.</td></tr>':
     !fi.length?`<tr><td colspan="9" class="empty">${S.infra.length?"Nenhum registro encontrado com esses filtros.":"Nenhum registro de Infra ainda. Clique em <b>Novo registro</b> para começar."}</td></tr>`:
     fi.map(r=>`<tr class="${r.resolvido?"done":""}">
       ${dots("infra",r)}
