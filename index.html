@@ -6,12 +6,12 @@
 <meta name="theme-color" content="#17181a">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Fibra Óptica">
+<meta name="apple-mobile-web-app-title" content="FiberControl">
 <link rel="manifest" href="manifest.webmanifest">
 <script>try{var t=localStorage.getItem("fibra-optica-gh-theme");if(t==="light"||t==="dark")document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icon-192.png">
-<title>Gestão de Fibra Óptica</title>
+<title>FiberControl</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&display=swap">
 <style>
@@ -218,7 +218,7 @@ html{color-scheme:light}body{margin:0}[hidden]{display:none!important}
 
 <header class="top"><div class="wrap brand">
   <div class="logo" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9a2 2 0 0 1-2-2V5h6v2a2 2 0 0 1-2 2Z"/><path d="M3 5V3M7 5V3"/><path d="M5 9v8.5a3.5 3.5 0 0 0 7 0v-11a3.5 3.5 0 0 1 7 0V15"/><path d="M17 15h4v2a2 2 0 0 1-4 0Z"/><path d="M19 21v-2"/></svg></div>
-  <div><h1>Gestão de Fibra Óptica</h1><p>Controle de metragem por instalação e acompanhamento de emendas e fusões</p></div>
+  <div><h1>FiberControl</h1><p>Gestão de fibra óptica: metragem, emendas, CTOs e infra</p></div>
   <div class="who" id="who" hidden></div>
   <button class="btn ghost viewtoggle" id="theme-toggle" type="button" title="Tema: automático, claro ou escuro"></button>
   <button class="btn ghost viewtoggle" id="view-toggle" type="button" title="Alternar entre a versão de celular e a de computador"></button>
@@ -956,7 +956,7 @@ async function exportXlsx(){
   const btns=[$("#m-csv"),$("#e-csv"),$("#c-csv"),$("#f-csv")];btns.forEach(b=>{b.disabled=true;b.dataset.t=b.textContent;b.textContent="Gerando…"});
   try{
     await loadExcelJS();
-    const wb=new ExcelJS.Workbook();wb.creator=ME.email||"Gestão de Fibra Óptica";wb.created=new Date();
+    const wb=new ExcelJS.Workbook();wb.creator=ME.email||"FiberControl";wb.created=new Date();
     const filtros=[];const mq=$("#m-q").value.trim(),meq=$("#m-eq").value,mde=$("#m-de").value,mate=$("#m-ate").value;
     if(meq)filtros.push("equipe "+(teamName(meq)||""));if(mde||mate)filtros.push("período "+(mde?fmtDate(mde):"início")+" a "+(mate?fmtDate(mate):"hoje"));if(mq)filtros.push('busca "'+mq+'"');
     const sub=`Gerado em ${fmtDT(Date.now())} por ${ME.email||"—"}`+(filtros.length?` · Filtros: ${filtros.join(", ")}`:"");
@@ -1042,7 +1042,7 @@ async function exportXlsx(){
 
     const buf=await wb.xlsx.writeBuffer();
     const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([buf],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"}));
-    a.download=`fibra-optica-${today()}.xlsx`;document.body.append(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1500);
+    a.download=`FiberControl-${today()}.xlsx`;document.body.append(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1500);
     toast("Planilha gerada.");
   }catch(e){toast("Não foi possível gerar a planilha. Verifique a internet e tente de novo.")}
   finally{btns.forEach(b=>{b.disabled=false;b.textContent=b.dataset.t})}

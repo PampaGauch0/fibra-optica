@@ -1,6 +1,6 @@
 {
-  "name": "Gestão de Fibra Óptica",
-  "short_name": "Fibra Óptica",
+  "name": "FiberControl",
+  "short_name": "FiberControl",
   "description": "Controle de metragem, emendas, fusões e CTOs",
   "lang": "pt-BR",
   "start_url": "./",
