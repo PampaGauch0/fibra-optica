@@ -18,4 +18,4 @@ window.FIREBASE_CONFIG = {
 // O administrador vê a aba "Acesso", libera os e-mails dos funcionários,
 // importa dados e é o único que pode excluir registros.
 // Use os MESMOS e-mails na função admins() do arquivo firestore.rules.
-window.ADMIN_EMAILS = ["alisondeep2025@gmail.com"];
+window.ADMIN_EMAILS = ["alisondeep2025@gmail.com", "claudiodusguri@gmail.com", "alisonvieiradasilva1995@gmail.com"];
