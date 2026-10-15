@@ -129,6 +129,11 @@ td.dots{width:36px;padding-right:0}
 .menu button.danger{color:var(--bad)}
 .menu .meta{font-size:12px;color:var(--muted);padding:6px 10px 8px;border-bottom:1px solid var(--line);margin-bottom:4px}
 .nw{white-space:nowrap}
+.setpick{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:10px}
+td .setpick{margin-top:0}
+.setchip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:4px 10px;font-size:12px;cursor:pointer;color:var(--muted)}
+.setchip.on{background:var(--ink);border-color:var(--ink);color:var(--ink-fg);font-weight:600}
+html.m .setchip{padding:8px 12px;font-size:14px}
 .maplink{display:inline-flex;align-items:center;gap:3px;font-weight:600;color:var(--fg);text-decoration:none;border:1px solid var(--line);border-radius:999px;padding:1px 8px;font-size:12px;margin-right:4px}
 .maplink:hover{background:var(--soft)}
 .hist{list-style:none;margin:0;padding:0;display:grid;gap:0}
@@ -325,7 +330,9 @@ html{color-scheme:light}body{margin:0}[hidden]{display:none!important}
       <input id="ac-nome" class="field" placeholder="Nome (opcional)" aria-label="Nome" style="flex:1 1 160px">
       <button class="btn primary" id="ac-add" type="button">Liberar acesso</button>
     </div>
-    <div class="tablebox"><table style="min-width:600px"><thead><tr><th>E-mail</th><th>Nome</th><th>Liberado em</th><th>Liberado por</th><th></th></tr></thead><tbody id="ac-body"></tbody></table></div>
+    <div class="setpick" id="ac-set" role="group" aria-label="Setores do novo usuário"><span class="hint">Setor:</span></div>
+    <div class="notice" id="ac-warn" hidden></div>
+    <div class="tablebox"><table style="min-width:600px"><thead><tr><th>E-mail</th><th>Nome</th><th>Setores</th><th>Liberado em</th><th>Liberado por</th><th></th></tr></thead><tbody id="ac-body"></tbody></table></div>
     <div class="team" style="margin-top:16px"><h3>Importar dados</h3>
       <p class="hint" style="margin:0">Selecione o arquivo dados-importacao.json para trazer os registros da versão anterior. Registros com o mesmo código são substituídos.</p>
       <input type="file" id="ac-file" accept="application/json,.json"></div>
@@ -355,6 +362,15 @@ const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 function toast(msg){const t=$("#toast");t.textContent=msg;t.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>t.hidden=true,2600)}
 
 const COLS=["equipes","instalacoes","emendas","ctos"];
+/* Setores: cada setor = uma aba do sistema e os dados dela */
+const SETORES={
+  metragem:{nome:"Controle de Metragem",abas:["met","eq"],cols:["equipes","instalacoes"]},
+  emendas:{nome:"Emendas e Fusões",abas:["em"],cols:["emendas"]},
+  ctos:{nome:"CTOs",abas:["cto"],cols:["ctos"]}};
+let MEUS_SETORES=[];
+const can=s=>IS_ADMIN||MEUS_SETORES.includes(s);
+const myCols=()=>COLS.filter(c=>Object.entries(SETORES).some(([k,v])=>can(k)&&v.cols.includes(c)));
+const myTabs=()=>Object.entries(SETORES).filter(([k])=>can(k)).flatMap(([,v])=>v.abas).concat(IS_ADMIN?["ac"]:[]);
 const S={equipes:[],instalacoes:[],emendas:[],ctos:[],loaded:false,mode:"pending"};
 const DEFAULT_TEAMS=[{id:"eq1",nome:"Antônio e Ruan",membros:"Antônio, Ruan",ativa:true},{id:"eq2",nome:"Airton e Gustavo",membros:"Airton, Gustavo",ativa:true},{id:"eq3",nome:"Suporte: Gabriel",membros:"Gabriel",ativa:true}];
 
@@ -396,10 +412,16 @@ function showWho(u){const w=$("#who");w.innerHTML="";
   const out=document.createElement("button");out.className="btn ghost";out.type="button";out.textContent="Sair";out.onclick=()=>auth.signOut();
   w.append(sp,$("#theme-toggle"),$("#view-toggle"),out);w.hidden=false}
 function openApp(){
-  $("#gate").hidden=true;$("#app").hidden=false;$("#tab-ac").hidden=!IS_ADMIN;
-  COLS.forEach(col=>unsubs.push(fs.collection(col).onSnapshot(snap=>{
+  $("#gate").hidden=true;$("#app").hidden=false;
+  const tabs=myTabs();
+  document.querySelectorAll("[data-tab]").forEach(b=>b.hidden=!tabs.includes(b.dataset.tab));
+  let want=null;try{want=localStorage.getItem(LS+"-tab")}catch(e){}
+  const first=tabs.includes(want)&&want!=="ac"?want:tabs[0];
+  document.querySelector(`[data-tab="${first}"]`).click();
+  const cols=myCols();
+  cols.forEach(col=>unsubs.push(fs.collection(col).onSnapshot(snap=>{
     S[col]=snap.docs.map(d=>({id:d.id,...d.data()}));S["_"+col]=1;
-    if(COLS.every(c=>S["_"+c]))S.loaded=true;render()
+    if(cols.every(c=>S["_"+c]))S.loaded=true;render()
   },e=>toast(e.code==="permission-denied"?"Sem permissão para ver os dados.":"Erro ao carregar os dados."))));
   if(IS_ADMIN)unsubs.push(fs.collection("acesso").onSnapshot(sn=>{S.acesso=sn.docs.map(d=>({id:d.id,...d.data()}));renderAcesso()},()=>{}));
 }
@@ -415,9 +437,11 @@ function boot(){
     ME={id:u.uid,email:u.email,name:u.displayName||""};const em=(u.email||"").toLowerCase();
     IS_ADMIN=(window.ADMIN_EMAILS||[]).map(x=>String(x).toLowerCase()).includes(em);
     showWho(u);
-    let ok=IS_ADMIN;
-    if(!ok){try{ok=(await fs.collection("acesso").doc(em).get()).exists}catch(e){ok=false}}
+    let ok=IS_ADMIN;MEUS_SETORES=[];
+    if(!ok){try{const d=await fs.collection("acesso").doc(em).get();ok=d.exists;
+      if(ok)MEUS_SETORES=((d.data()||{}).setores||[]).filter(x=>SETORES[x])}catch(e){ok=false}}
     if(!ok){gate(`O e-mail ${u.email} ainda não tem acesso. Peça ao administrador para liberar o seu e-mail.`,true,true);return}
+    if(!IS_ADMIN&&!MEUS_SETORES.length){gate(`O e-mail ${u.email} está liberado, mas ainda não tem setor definido. Peça ao administrador para escolher o seu setor.`,true,true);return}
     openApp();render();
   });
 }
@@ -428,13 +452,20 @@ $("#g-login").onclick=async()=>{const p=new firebase.auth.GoogleAuthProvider();p
 $("#g-out").onclick=()=>auth.signOut();
 
 /* ---------- acesso (administrador) ---------- */
+const setChips=(sel,attr)=>Object.entries(SETORES).map(([k,v])=>`<button type="button" class="setchip ${sel.includes(k)?"on":""}" ${attr} data-set="${k}" aria-pressed="${sel.includes(k)}">${esc(v.nome)}</button>`).join("");
+$("#ac-set").insertAdjacentHTML("beforeend",setChips([],'data-new="1"'));
 function renderAcesso(){const rows=(S.acesso||[]).slice().sort((a,b)=>a.id.localeCompare(b.id));
-  $("#ac-body").innerHTML=rows.length?rows.map(r=>`<tr><td><b>${esc(r.id)}</b></td><td>${esc(r.nome||"—")}</td><td class="num dim">${r.liberadoEm?esc(fmtDT(r.liberadoEm)):"—"}</td><td class="dim">${esc(r.liberadoPor||"—")}</td><td class="r"><button class="btn ghost" data-ac-del="${esc(r.id)}">Remover</button></td></tr>`).join("")
-   :'<tr><td colspan="5" class="empty">Nenhum e-mail liberado ainda. Adicione o e-mail de cada funcionário acima.</td></tr>';labelCells()}
+  const sem=rows.filter(r=>!(r.setores||[]).length);
+  $("#ac-warn").hidden=!sem.length;$("#ac-warn").textContent=sem.length?`${sem.length===1?"1 usuário está":sem.length+" usuários estão"} sem setor e não consegue${sem.length===1?"":"m"} entrar: ${sem.map(r=>r.id).join(", ")}. Toque nos setores na linha de cada um.`:"";
+  $("#ac-body").innerHTML=rows.length?rows.map(r=>`<tr><td><b>${esc(r.id)}</b></td><td>${esc(r.nome||"—")}</td><td><div class="setpick">${setChips(r.setores||[],`data-user="${esc(r.id)}"`)}</div></td><td class="num dim">${r.liberadoEm?esc(fmtDT(r.liberadoEm)):"—"}</td><td class="dim">${esc(r.liberadoPor||"—")}</td><td class="r"><button class="btn ghost" data-ac-del="${esc(r.id)}">Remover</button></td></tr>`).join("")
+   :'<tr><td colspan="6" class="empty">Nenhum e-mail liberado ainda. Adicione o e-mail de cada funcionário acima.</td></tr>';labelCells()}
 $("#ac-add").onclick=()=>{const em=$("#ac-email").value.trim().toLowerCase();
   if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)){toast("Digite um e-mail válido.");return}
-  fs.collection("acesso").doc(em).set({nome:$("#ac-nome").value.trim(),liberadoEm:Date.now(),liberadoPor:ME.email}).catch(e=>toast(failMsg(e)));
-  $("#ac-email").value="";$("#ac-nome").value="";toast(em+" liberado.")};
+  const setores=[...document.querySelectorAll('#ac-set .setchip.on')].map(b=>b.dataset.set);
+  if(!setores.length){toast("Escolha pelo menos um setor para este usuário.");return}
+  fs.collection("acesso").doc(em).set({nome:$("#ac-nome").value.trim(),setores,liberadoEm:Date.now(),liberadoPor:ME.email}).catch(e=>toast(failMsg(e)));
+  $("#ac-email").value="";$("#ac-nome").value="";document.querySelectorAll('#ac-set .setchip').forEach(b=>{b.classList.remove("on");b.setAttribute("aria-pressed","false")});
+  toast(`${em} liberado: ${setores.map(k=>SETORES[k].nome).join(", ")}.`)};
 $("#ac-file").onchange=async e=>{const f=e.target.files[0];if(!f)return;
   try{const o=JSON.parse(await f.text());const list=[];
     COLS.forEach(c=>Object.entries(o[c]||{}).forEach(([id,body])=>list.push([c,id,body])));
@@ -486,7 +517,7 @@ document.querySelectorAll("[data-tab]").forEach(b=>b.onclick=()=>{tab=b.dataset.
   document.querySelectorAll("[data-tab]").forEach(x=>x.setAttribute("aria-selected",x===b));
   ["met","em","cto","eq","ac"].forEach(k=>$("#pane-"+k).hidden=k!==tab);
   try{localStorage.setItem(LS+"-tab",tab)}catch(e){}});
-try{const t=localStorage.getItem(LS+"-tab");if(t&&t!=="met"&&t!=="ac")document.querySelector(`[data-tab="${t}"]`).click()}catch(e){}
+
 
 /* ---------- helpers de domínio ---------- */
 const teamName=id=>{const t=S.equipes.find(t=>t.id===id);return t?t.nome:null};
@@ -751,6 +782,11 @@ async function histModal(col,id){const r=S[col].find(x=>x.id===id);if(!r)return;
 document.addEventListener("click",async e=>{
   if(menuEl&&!e.target.closest(".menu")&&!e.target.closest(".dotbtn"))closeMenu();
   const b=e.target.closest("button");if(!b)return;const d=b.dataset;
+  if(d.set&&d.new){b.classList.toggle("on");b.setAttribute("aria-pressed",b.classList.contains("on"));return}
+  if(d.set&&d.user){const r=(S.acesso||[]).find(x=>x.id===d.user);if(!r)return;
+    const cur=r.setores||[];const next=cur.includes(d.set)?cur.filter(x=>x!==d.set):[...cur,d.set];
+    fs.collection("acesso").doc(d.user).update({setores:next,setoresPor:ME.email,setoresEm:Date.now()}).catch(x=>toast(failMsg(x)));
+    toast(next.length?`${d.user}: ${next.map(k=>SETORES[k].nome).join(", ")}.`:`${d.user} ficou sem setor e não conseguirá entrar.`);return}
   if(d.menu){if(b.getAttribute("aria-expanded")==="true")closeMenu();else openMenu(b);return}
   if(d.mact){closeMenu();const col=d.col,r=S[col].find(x=>x.id===d.id);if(!r)return;
     if(d.mact==="hist")histModal(col,r.id);
@@ -836,6 +872,7 @@ async function exportXlsx(){
     if(meq)filtros.push("equipe "+(teamName(meq)||""));if(mde||mate)filtros.push("período "+(mde?fmtDate(mde):"início")+" a "+(mate?fmtDate(mate):"hoje"));if(mq)filtros.push('busca "'+mq+'"');
     const sub=`Gerado em ${fmtDT(Date.now())} por ${ME.email||"—"}`+(filtros.length?` · Filtros: ${filtros.join(", ")}`:"");
 
+    if(can("metragem")){
     /* aba 1: metragem */
     const ins=filteredInst();const w1=wb.addWorksheet("Controle de Metragem");
     w1.getRow(4).values=["Data","OS","Equipe","Local / Cliente","Metragem inicial (m)","Metragem final (m)","Metragem utilizada (m)","Observações","Última alteração por","Última alteração em"];
@@ -850,6 +887,19 @@ async function exportXlsx(){
       for(let c=1;c<=10;c++)row.getCell(c).border=border}
     w1.autoFilter={from:{row:4,column:1},to:{row:Math.max(4,last1),column:10}};
 
+    /* aba 3: resumo por equipe */
+    const w3=wb.addWorksheet("Resumo por Equipe");
+    w3.getRow(4).values=["Equipe","Funcionários","Instalações","Metragem utilizada (m)","Cabo restante (m)"];
+    styleSheet(w3,[26,30,14,22,18],"Resumo por Equipe","Calculado a partir da aba Controle de Metragem (mesmos filtros)");
+    const teams=S.equipes.slice().sort((a,b)=>a.nome.localeCompare(b.nome));
+    teams.forEach((t,k)=>{const n=5+k;const rs=ins.filter(r=>r.equipeId===t.id);const lf=lastFinal(t.id);
+      w3.getRow(n).values=[t.nome,t.membros||"",{formula:`COUNTIF('Controle de Metragem'!C5:C${Math.max(5,last1)},A${n})`,result:rs.length},
+        {formula:`SUMIF('Controle de Metragem'!C5:C${Math.max(5,last1)},A${n},'Controle de Metragem'!G5:G${Math.max(5,last1)})`,result:rs.reduce((s,r)=>s+(r.inicial-r.final),0)},lf?Number(lf.final):null];
+      [4,5].forEach(c=>w3.getRow(n).getCell(c).numFmt='#,##0.00');for(let c=1;c<=5;c++)w3.getRow(n).getCell(c).border=border});
+
+    }
+
+    if(can("emendas")){
     /* aba 2: emendas e fusões */
     const em=filteredEm();const w2=wb.addWorksheet("Emendas e Fusões");
     w2.getRow(4).values=["Status","Data","Cliente","OS","Tipo","Cidade","Endereço","Localização","Observações","Resolvido em","Última alteração por","Última alteração em"];
@@ -867,6 +917,9 @@ async function exportXlsx(){
       w2.getCell(n+1,1).value="Resolvidos";w2.getCell(n+1,2).value={formula:`COUNTIF(A5:A${last2},"✓ Resolvido")`,result:em.filter(r=>r.resolvido).length};
       [n,n+1].forEach(x=>w2.getRow(x).font={bold:true})}
 
+    }
+
+    if(can("ctos")){
     /* aba: CTOs */
     const ct=filteredCto();const wc=wb.addWorksheet("CTO Lotada ou Sinal Alto");
     wc.getRow(4).values=["Status","Data","ID da CTO (IXC)","Cidade","Portas","Sinal (dBm)","Ação a ser tomada","ID OS","Localização","Endereço","Observações","Resolvida em","Última alteração por","Última alteração em"];
@@ -880,15 +933,7 @@ async function exportXlsx(){
       for(let c=1;c<=14;c++)row.getCell(c).border=border});
     const lastC=4+ct.length;wc.autoFilter={from:{row:4,column:1},to:{row:Math.max(4,lastC),column:14}};
 
-    /* aba 3: resumo por equipe */
-    const w3=wb.addWorksheet("Resumo por Equipe");
-    w3.getRow(4).values=["Equipe","Funcionários","Instalações","Metragem utilizada (m)","Cabo restante (m)"];
-    styleSheet(w3,[26,30,14,22,18],"Resumo por Equipe","Calculado a partir da aba Controle de Metragem (mesmos filtros)");
-    const teams=S.equipes.slice().sort((a,b)=>a.nome.localeCompare(b.nome));
-    teams.forEach((t,k)=>{const n=5+k;const rs=ins.filter(r=>r.equipeId===t.id);const lf=lastFinal(t.id);
-      w3.getRow(n).values=[t.nome,t.membros||"",{formula:`COUNTIF('Controle de Metragem'!C5:C${Math.max(5,last1)},A${n})`,result:rs.length},
-        {formula:`SUMIF('Controle de Metragem'!C5:C${Math.max(5,last1)},A${n},'Controle de Metragem'!G5:G${Math.max(5,last1)})`,result:rs.reduce((s,r)=>s+(r.inicial-r.final),0)},lf?Number(lf.final):null];
-      [4,5].forEach(c=>w3.getRow(n).getCell(c).numFmt='#,##0.00');for(let c=1;c<=5;c++)w3.getRow(n).getCell(c).border=border});
+    }
 
     const buf=await wb.xlsx.writeBuffer();
     const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([buf],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"}));
