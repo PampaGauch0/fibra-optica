@@ -511,7 +511,11 @@ function mergeEdit(col,orig,out,acao){
   if(!keys.length)return null;const fin={...cur};keys.forEach(k=>fin[k]=out[k]);
   if(col==="instalacoes")fin.utilizada=Math.round((Number(fin.inicial)-Number(fin.final))*100)/100;
   return withHist(col,cur,fin,acao)}
-function whoLabel(e){const name=e.nome||"",mail=e.email||"";return name&&mail?`${name} (${mail})`:(name||mail||"Usuário sem identificação")}
+/* E-mails que não aparecem na tela (continuam valendo para acesso, permissões e histórico) */
+const OCULTOS=["alisondeep2025@gmail.com"];
+const mostra=e=>OCULTOS.includes(String(e||"").trim().toLowerCase())?"":String(e||"");
+const quem=(nome,email)=>nome||mostra(email)||(email?"Administrador":"");
+function whoLabel(e){const name=e.nome||"",mail=mostra(e.email);return name&&mail?`${name} (${mail})`:(name||mail||(e.email?"Administrador":"Usuário sem identificação"))}
 const LS="fibra-optica-gh";
 let fs=null, auth=null, IS_ADMIN=false; const unsubs=[];
 function failMsg(e){return e&&e.code==="permission-denied"?"Sem permissão para esta ação. Fale com o administrador.":"Não foi possível salvar. Tente novamente."}
@@ -529,7 +533,7 @@ function loginErr(e){const c=e&&e.code||"";
   return"Não foi possível entrar ("+(c||"erro desconhecido")+"). Tente novamente."}
 function showWho(u){const w=$("#who");w.innerHTML="";
   if(u.photoURL){const img=document.createElement("img");img.src=u.photoURL;img.alt="";img.referrerPolicy="no-referrer";w.append(img)}
-  const sp=document.createElement("span");sp.textContent=u.email;sp.title="Suas alterações ficam registradas com este e-mail";
+  const sp=document.createElement("span");sp.textContent=mostra(u.email)||u.displayName||"Administrador";if(mostra(u.email))sp.title="Suas alterações ficam registradas com este e-mail";
   const out=document.createElement("button");out.className="btn ghost";out.type="button";out.textContent="Sair";out.onclick=()=>auth.signOut();
   w.append(sp,$("#theme-toggle"),$("#view-toggle"),out);w.hidden=false}
 function openApp(){
@@ -576,10 +580,10 @@ $("#g-out").onclick=()=>auth.signOut();
 /* ---------- acesso (administrador) ---------- */
 const setChips=(sel,attr)=>Object.entries(SETORES).map(([k,v])=>`<button type="button" class="setchip ${sel.includes(k)?"on":""}" ${attr} data-set="${k}" aria-pressed="${sel.includes(k)}">${esc(v.nome)}</button>`).join("");
 $("#ac-set").insertAdjacentHTML("beforeend",setChips([],'data-new="1"'));
-function renderAcesso(){const rows=(S.acesso||[]).slice().sort((a,b)=>a.id.localeCompare(b.id));
+function renderAcesso(){const rows=(S.acesso||[]).filter(r=>mostra(r.id)).slice().sort((a,b)=>a.id.localeCompare(b.id));
   const sem=rows.filter(r=>!(r.setores||[]).length);
   $("#ac-warn").hidden=!sem.length;$("#ac-warn").textContent=sem.length?`${sem.length===1?"1 usuário está":sem.length+" usuários estão"} sem setor e não consegue${sem.length===1?"":"m"} entrar: ${sem.map(r=>r.id).join(", ")}. Toque nos setores na linha de cada um.`:"";
-  $("#ac-body").innerHTML=rows.length?rows.map(r=>`<tr><td><b>${esc(r.id)}</b></td><td>${esc(r.nome||"—")}</td><td><div class="setpick">${setChips(r.setores||[],`data-user="${esc(r.id)}"`)}</div></td><td class="num dim">${r.liberadoEm?esc(fmtDT(r.liberadoEm)):"—"}</td><td class="dim">${esc(r.liberadoPor||"—")}</td><td class="r"><button class="btn ghost" data-ac-del="${esc(r.id)}">Remover</button></td></tr>`).join("")
+  $("#ac-body").innerHTML=rows.length?rows.map(r=>`<tr><td><b>${esc(r.id)}</b></td><td>${esc(r.nome||"—")}</td><td><div class="setpick">${setChips(r.setores||[],`data-user="${esc(r.id)}"`)}</div></td><td class="num dim">${r.liberadoEm?esc(fmtDT(r.liberadoEm)):"—"}</td><td class="dim">${esc(quem("",r.liberadoPor)||"—")}</td><td class="r"><button class="btn ghost" data-ac-del="${esc(r.id)}">Remover</button></td></tr>`).join("")
    :'<tr><td colspan="6" class="empty">Nenhum e-mail liberado ainda. Adicione o e-mail de cada funcionário acima.</td></tr>';labelCells()}
 $("#ac-add").onclick=()=>{const em=$("#ac-email").value.trim().toLowerCase();
   if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)){toast("Digite um e-mail válido.");return}
@@ -750,7 +754,7 @@ function renderDash(){const pane=$("#pane-dash");if(!pane||pane.hidden)return;
     l1.innerHTML=!ps.length?nodata("Nenhuma pendência no período. ✓"):`<div class="tablebox"><table><thead><tr><th>Setor</th><th>Registro</th><th>Cidade</th><th>Data</th><th class="r">Em aberto</th></tr></thead><tbody>${ps.map(({c,r})=>{const d=Math.max(0,dayDiff(r.data,today()));return`<tr><td><span class="sdot" style="background:var(${DNOME[c][2]})"></span>${esc(DNOME[c][1])}</td><td class="trunc" title="${esc(recName(c,r))}">${esc(recName(c,r))}</td><td>${esc(titleCase(r.cidade)||"—")}</td><td class="num">${fmtDate(r.data)}</td><td class="r num"><b>${d}</b> ${d===1?"dia":"dias"}</td></tr>`}).join("")}</tbody></table></div>`}
   // 7. últimas alterações
   const hs=cols.flatMap(c=>(S[c]||[]).flatMap(r=>(r.historico||[]).map(h=>({c,r,h})))).filter(x=>{const d=new Date(x.h.em);d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return inRange(d.toISOString().slice(0,10),de,ate)}).sort((a,b)=>b.h.em-a.h.em).slice(0,document.documentElement.classList.contains("m")?6:10);
-  $("#d-l2").innerHTML=!hs.length?nodata("Nenhuma alteração no período."):`<div class="tablebox"><table><thead><tr><th>Quando</th><th>Quem</th><th>Setor</th><th>Registro</th><th>O que mudou</th></tr></thead><tbody>${hs.map(({c,r,h})=>`<tr><td class="num">${esc(fmtDT(h.em).slice(0,17))}</td><td class="trunc" title="${esc(h.email||"")}">${esc(h.nome||h.email||"—")}</td><td><span class="sdot" style="background:var(${DNOME[c][2]})"></span>${esc(DNOME[c][1])}</td><td class="trunc" title="${esc(recName(c,r))}">${esc(recName(c,r))}</td><td class="trunc">${esc(h.acao||"")}${h.mudancas&&h.mudancas.length?`: ${esc(h.mudancas.map(m=>m.campo).join(", "))}`:""}</td></tr>`).join("")}</tbody></table></div>`;
+  $("#d-l2").innerHTML=!hs.length?nodata("Nenhuma alteração no período."):`<div class="tablebox"><table><thead><tr><th>Quando</th><th>Quem</th><th>Setor</th><th>Registro</th><th>O que mudou</th></tr></thead><tbody>${hs.map(({c,r,h})=>`<tr><td class="num">${esc(fmtDT(h.em).slice(0,17))}</td><td class="trunc" title="${esc(mostra(h.email))}">${esc(quem(h.nome,h.email)||"—")}</td><td><span class="sdot" style="background:var(${DNOME[c][2]})"></span>${esc(DNOME[c][1])}</td><td class="trunc" title="${esc(recName(c,r))}">${esc(recName(c,r))}</td><td class="trunc">${esc(h.acao||"")}${h.mudancas&&h.mudancas.length?`: ${esc(h.mudancas.map(m=>m.campo).join(", "))}`:""}</td></tr>`).join("")}</tbody></table></div>`;
   labelCells()}
 /* tooltip único do painel (texto via textContent) */
 (function(){const tip=$("#dtip");let cur=null;
@@ -1176,7 +1180,7 @@ function loadExcelJS(){if(window.ExcelJS)return Promise.resolve();
   return xlLoading||(xlLoading=new Promise((ok,err)=>{const sc=document.createElement("script");
     sc.src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js";sc.onload=ok;sc.onerror=()=>{xlLoading=null;err()};document.head.append(sc)}))}
 const xlDate=iso=>{if(!iso)return null;const[y,m,d]=iso.split("-").map(Number);return new Date(Date.UTC(y,m-1,d))};
-const lastEdit=r=>{const h=r.historico||[];const l=h[h.length-1];return l?[l.email||l.nome||"",new Date(l.em-new Date(l.em).getTimezoneOffset()*60000)]:["",null]};
+const lastEdit=r=>{const h=r.historico||[];const l=h[h.length-1];return l?[mostra(l.email)||quem(l.nome,l.email),new Date(l.em-new Date(l.em).getTimezoneOffset()*60000)]:["",null]};
 function styleSheet(ws,widths,title,sub){
   ws.columns=widths.map(w=>({width:w}));
   ws.mergeCells(1,1,1,widths.length);ws.getCell(1,1).value=title;ws.getCell(1,1).font={bold:true,size:14};
@@ -1190,10 +1194,10 @@ async function exportXlsx(){
   const btns=[$("#m-csv"),$("#e-csv"),$("#c-csv"),$("#f-csv")];btns.forEach(b=>{b.disabled=true;b.dataset.t=b.textContent;b.textContent="Gerando…"});
   try{
     await loadExcelJS();
-    const wb=new ExcelJS.Workbook();wb.creator=ME.email||"FiberControl";wb.created=new Date();
+    const wb=new ExcelJS.Workbook();wb.creator=mostra(ME.email)||"FiberControl";wb.created=new Date();
     const filtros=[];const mq=$("#m-q").value.trim(),meq=$("#m-eq").value,mde=$("#m-de").value,mate=$("#m-ate").value;
     if(meq)filtros.push("equipe "+(teamName(meq)||""));if(mde||mate)filtros.push("período "+(mde?fmtDate(mde):"início")+" a "+(mate?fmtDate(mate):"hoje"));if(mq)filtros.push('busca "'+mq+'"');
-    const sub=`Gerado em ${fmtDT(Date.now())} por ${ME.email||"—"}`+(filtros.length?` · Filtros: ${filtros.join(", ")}`:"");
+    const sub=`Gerado em ${fmtDT(Date.now())} por ${quem(ME.name,ME.email)||"—"}`+(filtros.length?` · Filtros: ${filtros.join(", ")}`:"");
 
     if(can("metragem")){
     /* aba 1: metragem */
@@ -1226,7 +1230,7 @@ async function exportXlsx(){
     /* aba 2: emendas e fusões */
     const em=filteredEm();const w2=wb.addWorksheet("Emendas e Fusões");
     w2.getRow(4).values=["Status","Data","Cliente","OS","Tipo","Cidade","Endereço","Localização","Observações","Resolvido em","Última alteração por","Última alteração em"];
-    styleSheet(w2,[14,12,26,10,10,16,30,40,40,14,28,18],"Controle de Emendas e Fusões",`Gerado em ${fmtDT(Date.now())} por ${ME.email||"—"}`);
+    styleSheet(w2,[14,12,26,10,10,16,30,40,40,14,28,18],"Controle de Emendas e Fusões",`Gerado em ${fmtDT(Date.now())} por ${quem(ME.name,ME.email)||"—"}`);
     em.forEach((r,k)=>{const n=5+k;const[por,quando]=lastEdit(r);const row=w2.getRow(n);
       row.values=[r.resolvido?"✓ Resolvido":"Pendente",xlDate(r.data),r.cliente||"",r.os||"",r.tipo||"",r.cidade||"",r.endereco||"",r.local||"",r.obs||"",xlDate(r.resolvidoEm),por,quando];
       row.getCell(1).fill={type:"pattern",pattern:"solid",fgColor:{argb:r.resolvido?"FFE5F4EA":"FFFBF0DD"}};
@@ -1246,7 +1250,7 @@ async function exportXlsx(){
     /* aba: CTOs */
     const ct=filteredCto();const wc=wb.addWorksheet("CTO Lotada ou Sinal Alto");
     wc.getRow(4).values=["Status","Data","ID da CTO (IXC)","Cidade","Portas","Sinal (dBm)","Ação a ser tomada","ID OS","Localização","Endereço","Observações","Resolvida em","Última alteração por","Última alteração em"];
-    styleSheet(wc,[14,12,14,16,9,12,34,10,40,30,30,14,28,18],"CTO Lotada ou com Sinal Alto",`Gerado em ${fmtDT(Date.now())} por ${ME.email||"—"}`);
+    styleSheet(wc,[14,12,14,16,9,12,34,10,40,30,30,14,28,18],"CTO Lotada ou com Sinal Alto",`Gerado em ${fmtDT(Date.now())} por ${quem(ME.name,ME.email)||"—"}`);
     ct.forEach((r,k)=>{const n=5+k;const[por,quando]=lastEdit(r);const row=wc.getRow(n);const u=mapUrl(r.local);
       row.values=[r.resolvido?"✓ Resolvida":"Pendente",xlDate(r.data),r.ctoId&&/^\d+$/.test(r.ctoId)?Number(r.ctoId):(r.ctoId||""),r.cidade||"",r.portas===""?null:r.portas,r.sinal===""?null:r.sinal,r.acao||"",r.os||"",u?{text:r.local,hyperlink:u}:(r.local||""),r.endereco||"",r.obs||"",xlDate(r.resolvidoEm),por,quando];
       row.getCell(1).fill={type:"pattern",pattern:"solid",fgColor:{argb:r.resolvido?"FFE5F4EA":"FFFBF0DD"}};
@@ -1261,7 +1265,7 @@ async function exportXlsx(){
     /* aba: Infra */
     const fi=filteredInfra();const wf=wb.addWorksheet("Infra");
     wf.getRow(4).values=["Status","Data","Cliente","ID OS","Cidade","Endereço","Localização","Observação","Resolvido em","Última alteração por","Última alteração em"];
-    styleSheet(wf,[14,12,26,10,16,30,40,40,14,28,18],"Infra",`Gerado em ${fmtDT(Date.now())} por ${ME.email||"—"}`);
+    styleSheet(wf,[14,12,26,10,16,30,40,40,14,28,18],"Infra",`Gerado em ${fmtDT(Date.now())} por ${quem(ME.name,ME.email)||"—"}`);
     fi.forEach((r,k)=>{const n=5+k;const[por,quando]=lastEdit(r);const row=wf.getRow(n);const u=mapUrl(r.local);
       row.values=[r.resolvido?"✓ Resolvido":"Pendente",xlDate(r.data),r.cliente||"",r.os||"",r.cidade||"",r.endereco||"",u?{text:r.local,hyperlink:u}:(r.local||""),r.obs||"",xlDate(r.resolvidoEm),por,quando];
       row.getCell(1).fill={type:"pattern",pattern:"solid",fgColor:{argb:r.resolvido?"FFE5F4EA":"FFFBF0DD"}};
