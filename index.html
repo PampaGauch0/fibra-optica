@@ -1287,6 +1287,16 @@ async function exportXlsx(){
 }
 $("#m-csv").onclick=exportXlsx;$("#e-csv").onclick=exportXlsx;$("#c-csv").onclick=exportXlsx;$("#f-csv").onclick=exportXlsx;
 
+/* ---------- atualização automática: se houver versão nova publicada, recarrega ---------- */
+const BUILD="2026-10-15-2235";
+let lastChk=0;
+async function checkUpdate(){if(location.protocol==="file:"||Date.now()-lastChk<120000)return;lastChk=Date.now();
+  try{const t=await(await fetch(location.pathname+"?nocache="+Date.now(),{cache:"no-store"})).text();
+    const m=t.match(/const BUILD="([^"]+)"/);
+    if(m&&m[1]!==BUILD){const k=LS+"-build";let done=null;try{done=sessionStorage.getItem(k)}catch(e){}
+      if(done!==m[1]){try{sessionStorage.setItem(k,m[1])}catch(e){}if(!$("#modal-root").innerHTML)location.reload()}}}catch(e){}}
+checkUpdate();document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")checkUpdate()});
+
 boot();
 })();
 </script>
