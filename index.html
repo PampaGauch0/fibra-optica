@@ -849,7 +849,7 @@ function render(){
       <td class="num"><b>${fmtDate(r.data)}</b></td>
       <td class="num">${r.os?esc(r.os):'<span class="dim">—</span>'}</td>
       <td>${esc(teamName(r.equipeId)||r.equipeNome||"—")}</td>
-      <td class="trunc" title="${esc(r.local)}">${esc(r.local)||'<span style="color:var(--muted)">—</span>'}</td>
+      <td class="trunc" title="${esc(r.local)}">${mapUrl(r.local)?`<a class="maplink" href="${esc(mapUrl(r.local))}" target="_blank" rel="noopener">${pin} Mapa</a>`:(esc(r.local)||'<span style="color:var(--muted)">—</span>')}</td>
       <td class="r dim num">${fmt(r.inicial)} m</td><td class="r dim num">${fmt(r.final)} m</td>
       <td class="r num"><b>${fmt(u)} m</b></td>
       <td><span class="chip obs" title="${esc(r.obs||"Sem observações")}">${bubble}${r.obs?1:0}</span></td>
