@@ -178,7 +178,8 @@ html.m .field,html.m .btn{height:42px;font-size:16px}
 html.m .spacer{display:none}
 html.m .bar .btn.ghost{flex:1 1 calc(50% - 4px);border-color:var(--line);justify-content:center}
 html.m .bar .btn:not(.primary):not(.ghost){flex:1 1 calc(50% - 4px);justify-content:center}
-html.m .bar .btn.primary{position:fixed;right:16px;bottom:calc(18px + env(safe-area-inset-bottom,0px));z-index:6;height:54px;border-radius:999px;padding:0 20px;box-shadow:0 6px 20px rgb(0 0 0/.25);font-size:15px}
+html.m #ac-add{position:static;flex:1 1 100%;height:46px;border-radius:8px;box-shadow:none;justify-content:center}
+html.m .bar .btn.primary:not(#ac-add){position:fixed;right:16px;bottom:calc(18px + env(safe-area-inset-bottom,0px));z-index:6;height:54px;border-radius:999px;padding:0 20px;box-shadow:0 6px 20px rgb(0 0 0/.25);font-size:15px}
 /* tabelas viram cartões */
 html.m .tablebox{background:none;border:0;overflow:visible;margin-top:12px}
 html.m .tablebox table{min-width:0!important;display:block}
@@ -436,9 +437,9 @@ html{color-scheme:light}body{margin:0}[hidden]{display:none!important}
     <div class="bar">
       <input id="ac-email" class="field" type="email" placeholder="email.do.funcionario@gmail.com" aria-label="E-mail" style="flex:1 1 260px">
       <input id="ac-nome" class="field" placeholder="Nome (opcional)" aria-label="Nome" style="flex:1 1 160px">
-      <button class="btn primary" id="ac-add" type="button">Liberar acesso</button>
     </div>
     <div class="setpick" id="ac-set" role="group" aria-label="Setores do novo usuário"><span class="hint">Setor:</span></div>
+    <div class="bar" style="margin-top:12px"><button class="btn primary" id="ac-add" type="button">Liberar acesso</button></div>
     <div class="notice" id="ac-warn" hidden></div>
     <div class="tablebox"><table style="min-width:600px"><thead><tr><th>E-mail</th><th>Nome</th><th>Setores</th><th>Liberado em</th><th>Liberado por</th><th></th></tr></thead><tbody id="ac-body"></tbody></table></div>
     <div class="team" style="margin-top:16px"><h3>Importar dados</h3>
@@ -464,7 +465,7 @@ html{color-scheme:light}body{margin:0}[hidden]{display:none!important}
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const fmt=n=>(Number(n)||0).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2});
-const parseNum=v=>{v=String(v??"").trim().replace(/\s|m$/gi,"");if(!v)return NaN;if(v.includes(","))v=v.replace(/\./g,"").replace(",",".");else if(/^\d{1,3}(\.\d{3})+$/.test(v))v=v.replace(/\./g,"");return Number(v)};
+const parseNum=v=>{v=String(v??"").trim().replace(/\s/g,"").replace(/(dbm|m)$/i,"");if(!v)return NaN;if(v.includes(","))v=v.replace(/\./g,"").replace(",",".");else if(/^\d{1,3}(\.\d{3})+$/.test(v))v=v.replace(/\./g,"");return Number(v)};
 const fmtDate=iso=>{if(!iso)return"—";const[y,m,d]=iso.split("-");return`${d}/${m}/${y.slice(2)}`};
 const today=()=>{const d=new Date();d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().slice(0,10)};
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
@@ -502,6 +503,14 @@ function withHist(col,old,neu,acao){
   if(!old)ent={...stamp(),acao:"Criou o registro"};
   else{const m=diff(col,old,neu);if(!m.length)return null;ent={...stamp(),acao:acao||"Alterou o registro",mudancas:m}}
   return{...neu,historico:[...h,ent].slice(-200)}}
+/* Edição: aplica só os campos que a pessoa mudou sobre a versão mais recente do registro,
+   para não apagar alterações (nem o histórico) feitas por outra pessoa enquanto o formulário estava aberto */
+function mergeEdit(col,orig,out,acao){
+  const cur=S[col].find(x=>x.id===orig.id)||orig;
+  const keys=Object.keys(out).filter(k=>k!=="historico"&&String(out[k]??"")!==String(orig[k]??""));
+  if(!keys.length)return null;const fin={...cur};keys.forEach(k=>fin[k]=out[k]);
+  if(col==="instalacoes")fin.utilizada=Math.round((Number(fin.inicial)-Number(fin.final))*100)/100;
+  return withHist(col,cur,fin,acao)}
 function whoLabel(e){const name=e.nome||"",mail=e.email||"";return name&&mail?`${name} (${mail})`:(name||mail||"Usuário sem identificação")}
 const LS="fibra-optica-gh";
 let fs=null, auth=null, IS_ADMIN=false; const unsubs=[];
@@ -576,9 +585,10 @@ $("#ac-add").onclick=()=>{const em=$("#ac-email").value.trim().toLowerCase();
   if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)){toast("Digite um e-mail válido.");return}
   const setores=[...document.querySelectorAll('#ac-set .setchip.on')].map(b=>b.dataset.set);
   if(!setores.length){toast("Escolha pelo menos um setor para este usuário.");return}
-  fs.collection("acesso").doc(em).set({nome:$("#ac-nome").value.trim(),setores,liberadoEm:Date.now(),liberadoPor:ME.email}).catch(e=>toast(failMsg(e)));
+  const ja=(S.acesso||[]).find(r=>r.id===em);const nome=$("#ac-nome").value.trim();
+  fs.collection("acesso").doc(em).set(ja?{...(nome?{nome}:{}),setores,setoresPor:ME.email,setoresEm:Date.now()}:{nome,setores,liberadoEm:Date.now(),liberadoPor:ME.email},{merge:true}).catch(e=>toast(failMsg(e)));
   $("#ac-email").value="";$("#ac-nome").value="";document.querySelectorAll('#ac-set .setchip').forEach(b=>{b.classList.remove("on");b.setAttribute("aria-pressed","false")});
-  toast(`${em} liberado: ${setores.map(k=>SETORES[k].nome).join(", ")}.`)};
+  toast(`${em} ${ja?"atualizado":"liberado"}: ${setores.map(k=>SETORES[k].nome).join(", ")}.`)};
 $("#ac-file").onchange=async e=>{const f=e.target.files[0];if(!f)return;
   try{const o=JSON.parse(await f.text());const list=[];
     COLS.forEach(c=>Object.entries(o[c]||{}).forEach(([id,body])=>list.push([c,id,body])));
@@ -616,7 +626,8 @@ const MQ=window.matchMedia("(max-width: 760px)");
 function viewPref(){try{return localStorage.getItem(LS+"-view")}catch(e){return null}}
 function applyView(){const pref=viewPref();const mobile=pref?pref==="m":MQ.matches;
   document.documentElement.classList.toggle("m",mobile);
-  $("#view-toggle").textContent=mobile?"Versão computador":"Versão celular"}
+  $("#view-toggle").textContent=mobile?"Versão computador":"Versão celular";
+  if(!$("#app").hidden&&S.loaded)setTimeout(render,0)}
 $("#view-toggle").onclick=()=>{const now=document.documentElement.classList.contains("m");const next=now?"d":"m";
   try{const auto=MQ.matches?"m":"d";if(next===auto)localStorage.removeItem(LS+"-view");else localStorage.setItem(LS+"-view",next)}catch(e){}applyView()};
 (MQ.addEventListener?MQ.addEventListener("change",applyView):MQ.addListener(applyView));applyView();
@@ -816,9 +827,11 @@ const bubble='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke
 const dots=(col,r)=>{const h=r.historico||[];const l=h[h.length-1];return`<td class="dots"><button class="dotbtn" data-menu="${col}" data-id="${esc(r.id)}" aria-haspopup="menu" aria-expanded="false" aria-label="Opções e histórico" title="${l?"Última alteração: "+esc(fmtDT(l.em)):"Opções"}">⋮</button></td>`};
 function renderTeamSelect(){
   const sel=$("#m-eq"),v=sel.value;
-  sel.innerHTML='<option value="">Todas as equipes</option>'+S.equipes.slice().sort((a,b)=>a.nome.localeCompare(b.nome)).map(t=>`<option value="${esc(t.id)}">${esc(t.nome)}</option>`).join("");
+  sel.innerHTML='<option value="">Todas as equipes</option>'+S.equipes.slice().sort((a,b)=>String(a.nome||"").localeCompare(String(b.nome||""))).map(t=>`<option value="${esc(t.id)}">${esc(t.nome)}</option>`).join("");
   sel.value=S.equipes.some(t=>t.id===v)?v:"";
 }
+const BLOQ=(col,n)=>`<tr><td colspan="${n}" class="empty">Sem permissão no banco para ver estes dados. Peça ao administrador para conferir o seu setor.</td></tr>`;
+const isBloq=c=>!!(S.bloq&&S.bloq[c]);
 function render(){
   renderTeamSelect();
   const loading=!S.loaded;
@@ -829,7 +842,7 @@ function render(){
   $("#s-eq").textContent=S.equipes.filter(t=>t.ativa!==false).length;
   $("#m-total").textContent=fmt(total)+" m";
   $("#m-count").textContent=`${ins.length} de ${S.instalacoes.length} instalações`;
-  $("#m-body").innerHTML=loading?'<tr><td colspan="10" class="empty">Carregando instalações…</td></tr>':
+  $("#m-body").innerHTML=loading?'<tr><td colspan="10" class="empty">Carregando instalações…</td></tr>':isBloq("instalacoes")?BLOQ("instalacoes",10):
     !ins.length?`<tr><td colspan="10" class="empty">${S.instalacoes.length?"Nenhuma instalação encontrada com esses filtros.":"Nenhuma instalação registrada. Clique em <b>Nova instalação</b> para lançar a primeira."}</td></tr>`:
     ins.map(r=>{const u=Number(r.inicial)-Number(r.final);return`<tr>
       ${dots("instalacoes",r)}
@@ -845,7 +858,7 @@ function render(){
   const em=filteredEm();
   $("#e-tot").textContent=em.length;$("#e-pend").textContent=em.filter(r=>!r.resolvido).length;$("#e-ok").textContent=em.filter(r=>r.resolvido).length;
   $("#e-count").textContent=`${em.length} de ${S.emendas.length} registros`;
-  $("#e-body").innerHTML=loading?'<tr><td colspan="10" class="empty">Carregando registros…</td></tr>':
+  $("#e-body").innerHTML=loading?'<tr><td colspan="10" class="empty">Carregando registros…</td></tr>':isBloq("emendas")?BLOQ("emendas",10):
     !em.length?`<tr><td colspan="10" class="empty">${S.emendas.length?"Nenhum registro encontrado com esses filtros.":"Nenhuma emenda ou fusão registrada. Clique em <b>Novo registro</b> para começar."}</td></tr>`:
     em.map(r=>`<tr class="${r.resolvido?"done":""}">
       ${dots("emendas",r)}
@@ -866,7 +879,7 @@ function render(){
   const ct=filteredCto();
   $("#c-tot").textContent=ct.length;$("#c-pend").textContent=ct.filter(r=>!r.resolvido).length;$("#c-ok").textContent=ct.filter(r=>r.resolvido).length;
   $("#c-count").textContent=`${ct.length} de ${S.ctos.length} CTOs`;
-  $("#c-body").innerHTML=loading?'<tr><td colspan="11" class="empty">Carregando CTOs…</td></tr>':
+  $("#c-body").innerHTML=loading?'<tr><td colspan="11" class="empty">Carregando CTOs…</td></tr>':isBloq("ctos")?BLOQ("ctos",11):
     !ct.length?`<tr><td colspan="11" class="empty">${S.ctos.length?"Nenhuma CTO encontrada com esses filtros.":"Nenhuma CTO registrada. Clique em <b>Nova CTO</b> ou importe a planilha na aba Acesso."}</td></tr>`:
     ct.map(r=>`<tr class="${r.resolvido?"done":""}">
       ${dots("ctos",r)}
@@ -887,7 +900,7 @@ function render(){
   $("#f-tot").textContent=fi.length;$("#f-pend").textContent=fi.filter(r=>!r.resolvido).length;$("#f-ok").textContent=fi.filter(r=>r.resolvido).length;
   $("#f-count").textContent=`${fi.length} de ${S.infra.length} registros`;
   $("#f-body").innerHTML=loading?'<tr><td colspan="9" class="empty">Carregando registros…</td></tr>':
-    (S.bloq&&S.bloq.infra)?'<tr><td colspan="9" class="empty">Sem permissão no banco para a aba Infra. As regras do Firebase precisam ser atualizadas.</td></tr>':
+    isBloq("infra")?BLOQ("infra",9):
     !fi.length?`<tr><td colspan="9" class="empty">${S.infra.length?"Nenhum registro encontrado com esses filtros.":"Nenhum registro de Infra ainda. Clique em <b>Novo registro</b> para começar."}</td></tr>`:
     fi.map(r=>`<tr class="${r.resolvido?"done":""}">
       ${dots("infra",r)}
@@ -901,7 +914,7 @@ function render(){
       <td class="r" style="white-space:nowrap"><span class="chip ${r.resolvido?"ok":"pend"}">${r.resolvido?"Resolvido":"Pendente"}</span><button class="icbtn" data-edit-f="${esc(r.id)}" aria-label="Editar">${pencil}</button></td></tr>`).join("");
   // equipes
   $("#t-list").innerHTML=loading?'<p class="hint">Carregando equipes…</p>':!S.equipes.length?'<p class="hint">Nenhuma equipe cadastrada.</p>':
-    S.equipes.slice().sort((a,b)=>(b.ativa!==false)-(a.ativa!==false)||a.nome.localeCompare(b.nome)).map(t=>{
+    S.equipes.slice().sort((a,b)=>(b.ativa!==false)-(a.ativa!==false)||String(a.nome||"").localeCompare(String(b.nome||""))).map(t=>{
       const rs=S.instalacoes.filter(r=>r.equipeId===t.id);const used=rs.reduce((s,r)=>s+(r.inicial-r.final),0);const lf=lastFinal(t.id);
       return`<div class="team ${t.ativa===false?"off":""}"><div style="display:flex;justify-content:space-between;gap:8px;align-items:start"><h3>${esc(t.nome)}</h3><span class="chip ${t.ativa===false?"":"ok"}">${t.ativa===false?"Inativa":"Ativa"}</span></div>
       <div class="row"><span>Funcionários</span><b style="text-align:right">${esc(t.membros||"—")}</b></div>
@@ -921,7 +934,8 @@ $("#e-clear").onclick=()=>{["#e-q","#e-de","#e-ate"].forEach(s=>$(s).value="");$
 /* ---------- modal ---------- */
 function modal(html,onMount){const root=$("#modal-root");root.innerHTML=`<div class="overlay"><div class="modal" role="dialog" aria-modal="true">${html}</div></div>`;
   const ov=root.firstChild;ov.addEventListener("mousedown",e=>{if(e.target===ov)close()});
-  const close=()=>root.innerHTML="";document.addEventListener("keydown",function k(e){if(e.key==="Escape"){close();document.removeEventListener("keydown",k)}});
+  const k=e=>{if(e.key==="Escape")close()};
+  const close=()=>{root.innerHTML="";document.removeEventListener("keydown",k)};document.addEventListener("keydown",k);
   onMount(ov,close);const f=ov.querySelector("input,select,textarea");f&&f.focus()}
 function confirmBox(text,onYes){modal(`<h2>Confirmar exclusão</h2><p style="margin:0">${esc(text)}</p><div class="mact"><button class="btn" id="c-no">Cancelar</button><button class="btn primary" id="c-yes" style="background:var(--bad);border-color:var(--bad);color:#fff">Excluir</button></div>`,(ov,close)=>{
   ov.querySelector("#c-no").onclick=close;ov.querySelector("#c-yes").onclick=async()=>{close();await onYes()}})}
@@ -931,7 +945,7 @@ function instForm(rec){
   const teams=S.equipes.filter(t=>t.ativa!==false||t.id===rec.equipeId);
   modal(`<h2>${isNew?"Nova instalação":"Editar instalação"}</h2>
   <div class="grid2">
-    <div class="f"><label for="i-eq">Equipe responsável</label><select id="i-eq" class="field"><option value="">Selecione…</option>${teams.map(t=>`<option value="${esc(t.id)}" ${t.id===rec.equipeId?"selected":""}>${esc(t.nome)}</option>`).join("")}</select></div>
+    <div class="f"><label for="i-eq">Equipe responsável</label><select id="i-eq" class="field"><option value="">Selecione…</option>${teams.map(t=>`<option value="${esc(t.id)}" ${t.id===rec.equipeId?"selected":""}>${esc(t.nome)}</option>`).join("")}${rec.equipeId&&!teams.some(t=>t.id===rec.equipeId)?`<option value="${esc(rec.equipeId)}" selected>${esc(rec.equipeNome||"Equipe")} (excluída)</option>`:""}</select></div>
     <div class="f"><label for="i-os">ID da OS</label><input id="i-os" class="field" value="${esc(rec.os)}" placeholder="Ex.: 10452"></div>
     <div class="f"><label for="i-data">Data</label><input id="i-data" class="field" type="date" value="${esc(rec.data)}"></div>
     <div class="f"><label for="i-local">Local / Cliente</label><input id="i-local" class="field" value="${esc(rec.local)}" placeholder="Endereço ou nome do cliente"></div>
@@ -955,8 +969,8 @@ function instForm(rec){
     q("#i-save").onclick=async()=>{const err=q("#i-err");const a=parseNum(q("#i-ini").value),b=parseNum(q("#i-fin").value);const eq=q("#i-eq").value;
       const m=!eq?"Selecione a equipe responsável.":!q("#i-data").value?"Informe a data do serviço.":isNaN(a)?"Informe a metragem inicial.":isNaN(b)?"Informe a metragem final.":a<0||b<0?"As metragens não podem ser negativas.":b>a?"A metragem final não pode ser maior que a inicial: o cabo diminui conforme é usado.":"";
       if(m){err.textContent=m;err.hidden=false;return}
-      const out={id:rec.id,equipeId:eq,equipeNome:teamName(eq),os:q("#i-os").value.trim(),data:q("#i-data").value,local:q("#i-local").value.trim(),inicial:a,final:b,utilizada:Math.round((a-b)*100)/100,obs:q("#i-obs").value.trim(),criadoEm:rec.criadoEm||Date.now()};
-      const outH=withHist("instalacoes",isNew?null:rec,out);if(!outH){close();toast("Nenhuma alteração para salvar.");return}
+      const out={id:rec.id,equipeId:eq,equipeNome:teamName(eq)||(eq===rec.equipeId?rec.equipeNome:"")||"",os:q("#i-os").value.trim(),data:q("#i-data").value,local:q("#i-local").value.trim(),inicial:a,final:b,utilizada:Math.round((a-b)*100)/100,obs:q("#i-obs").value.trim(),criadoEm:rec.criadoEm||Date.now()};
+      const outH=isNew?withHist("instalacoes",null,out):mergeEdit("instalacoes",rec,out);if(!outH){close();toast("Nenhuma alteração para salvar.");return}
       q("#i-save").disabled=true;if(await save("instalacoes",outH)){close();toast(isNew?`Instalação registrada: ${fmt(out.utilizada)} m utilizados.`:"Instalação atualizada.")}else q("#i-save").disabled=false}
   });
 }
@@ -979,10 +993,10 @@ function emForm(rec){
     const q=s=>ov.querySelector(s);let tipo=rec.tipo;
     q("#x-tipo").onclick=e=>{const b=e.target.closest("button");if(!b)return;tipo=b.dataset.v;q("#x-tipo").querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed",x===b))};
     q("#x-cancel").onclick=close;
-    q("#x-save").onclick=async()=>{const cli=q("#x-cli").value.trim();if(!cli){const e=q("#x-err");e.textContent="Informe o nome do cliente.";e.hidden=false;return}
+    q("#x-save").onclick=async()=>{const cli=q("#x-cli").value.trim();const xm=!cli?"Informe o nome do cliente.":!q("#x-data").value?"Informe a data.":"";if(xm){const e=q("#x-err");e.textContent=xm;e.hidden=false;return}
       const res=q("#x-st").value==="1";
       const out={id:rec.id,cliente:cli,os:q("#x-os").value.trim(),data:q("#x-data").value,tipo,local:q("#x-loc").value.trim(),endereco:q("#x-end").value.trim(),cidade:titleCase(q("#x-cid").value),obs:q("#x-obs").value.trim(),resolvido:res,resolvidoEm:res?(rec.resolvidoEm||today()):null,criadoEm:rec.criadoEm||Date.now()};
-      const outH=withHist("emendas",isNew?null:rec,out,(!isNew&&out.resolvido!==!!rec.resolvido)?(out.resolvido?"Marcou como resolvido ✓":"Reabriu como pendente"):null);if(!outH){close();toast("Nenhuma alteração para salvar.");return}
+      const outH=(isNew?(c,o,n,a)=>withHist(c,null,n,a):mergeEdit)("emendas",rec,out,(!isNew&&out.resolvido!==!!rec.resolvido)?(out.resolvido?"Marcou como resolvido ✓":"Reabriu como pendente"):null);if(!outH){close();toast("Nenhuma alteração para salvar.");return}
       q("#x-save").disabled=true;if(await save("emendas",outH)){close();toast(isNew?"Registro adicionado.":"Registro atualizado.")}else q("#x-save").disabled=false}
   });
 }
@@ -1008,11 +1022,11 @@ function ctoForm(rec){
   <div class="mact"><button class="btn" id="k-cancel">Cancelar</button><button class="btn primary" id="k-save">${isNew?"Registrar":"Salvar alterações"}</button></div>`,(ov,close)=>{
     const q=s=>ov.querySelector(s);q("#k-cancel").onclick=close;
     q("#k-save").onclick=async()=>{const err=q("#k-err");const sv=q("#k-sinal").value.trim();const sinal=sv===""?"":parseNum(sv);
-      const m=!q("#k-id").value.trim()&&!q("#k-loc").value.trim()?"Informe o ID da CTO ou a localização.":(sv!==""&&isNaN(sinal))?"O sinal deve ser um número, por exemplo -19.":"";
+      const m=!q("#k-id").value.trim()&&!q("#k-loc").value.trim()?"Informe o ID da CTO ou a localização.":!q("#k-data").value?"Informe a data.":(sv!==""&&isNaN(sinal))?"O sinal deve ser um número, por exemplo -19.":"";
       if(m){err.textContent=m;err.hidden=false;return}
       const res=q("#k-st").value==="1";
       const out={id:rec.id,data:q("#k-data").value,ctoId:q("#k-id").value.trim(),cidade:titleCase(q("#k-cid").value),os:q("#k-os").value.trim(),portas:q("#k-portas").value?Number(q("#k-portas").value):"",sinal,acao:q("#k-acao").value.trim(),local:q("#k-loc").value.trim(),endereco:q("#k-end").value.trim(),obs:q("#k-obs").value.trim(),resolvido:res,resolvidoEm:res?(rec.resolvidoEm||today()):null,criadoEm:rec.criadoEm||Date.now(),origem:rec.origem||null};
-      const outH=withHist("ctos",isNew?null:rec,out,(!isNew&&out.resolvido!==!!rec.resolvido)?(out.resolvido?"Marcou como resolvida ✓":"Reabriu como pendente"):null);if(!outH){close();toast("Nenhuma alteração para salvar.");return}
+      const outH=(isNew?(c,o,n,a)=>withHist(c,null,n,a):mergeEdit)("ctos",rec,out,(!isNew&&out.resolvido!==!!rec.resolvido)?(out.resolvido?"Marcou como resolvida ✓":"Reabriu como pendente"):null);if(!outH){close();toast("Nenhuma alteração para salvar.");return}
       q("#k-save").disabled=true;if(await save("ctos",outH)){close();toast(isNew?"CTO registrada.":"CTO atualizada.")}else q("#k-save").disabled=false}
   });
 }
@@ -1033,10 +1047,10 @@ function infraForm(rec){
   <div class="mact"><button class="btn" id="g-cancel">Cancelar</button><button class="btn primary" id="g-save">${isNew?"Registrar":"Salvar alterações"}</button></div>`,(ov,close)=>{
     const q=s=>ov.querySelector(s);q("#g-cancel").onclick=close;
     q("#g-save").onclick=async()=>{const cli=q("#g-cli").value.trim(),loc=q("#g-loc").value.trim(),end=q("#g-end").value.trim();
-      if(!cli&&!loc&&!end){const e=q("#g-err");e.textContent="Informe o cliente, o endereço ou a localização.";e.hidden=false;return}
+      const gm=!cli&&!loc&&!end?"Informe o cliente, o endereço ou a localização.":!q("#g-data").value?"Informe a data.":"";if(gm){const e=q("#g-err");e.textContent=gm;e.hidden=false;return}
       const res=q("#g-st").value==="1";
       const out={id:rec.id,data:q("#g-data").value,cliente:cli,os:q("#g-os").value.trim(),cidade:titleCase(q("#g-cid").value),endereco:end,local:loc,obs:q("#g-obs").value.trim(),resolvido:res,resolvidoEm:res?(rec.resolvidoEm||today()):null,criadoEm:rec.criadoEm||Date.now(),origem:rec.origem||null};
-      const outH=withHist("infra",isNew?null:rec,out,(!isNew&&out.resolvido!==!!rec.resolvido)?(out.resolvido?"Marcou como resolvido ✓":"Reabriu como pendente"):null);if(!outH){close();toast("Nenhuma alteração para salvar.");return}
+      const outH=(isNew?(c,o,n,a)=>withHist(c,null,n,a):mergeEdit)("infra",rec,out,(!isNew&&out.resolvido!==!!rec.resolvido)?(out.resolvido?"Marcou como resolvido ✓":"Reabriu como pendente"):null);if(!outH){close();toast("Nenhuma alteração para salvar.");return}
       q("#g-save").disabled=true;if(await save("infra",outH)){close();toast(isNew?"Registro de Infra adicionado.":"Registro atualizado.")}else q("#g-save").disabled=false}
   });
 }
@@ -1049,7 +1063,7 @@ function teamForm(rec){
   <div class="mact"><button class="btn" id="t-cancel">Cancelar</button><button class="btn primary" id="t-save">${isNew?"Adicionar equipe":"Salvar"}</button></div>`,(ov,close)=>{
     const q=s=>ov.querySelector(s);q("#t-cancel").onclick=close;
     q("#t-save").onclick=async()=>{const nome=q("#t-nome").value.trim();
-      if(!nome||S.equipes.some(t=>t.id!==rec.id&&t.nome.toLowerCase()===nome.toLowerCase())){const e=q("#t-err");e.textContent=nome?"Já existe uma equipe com esse nome.":"Informe o nome da equipe.";e.hidden=false;return}
+      if(!nome||S.equipes.some(t=>t.id!==rec.id&&String(t.nome||"").toLowerCase()===nome.toLowerCase())){const e=q("#t-err");e.textContent=nome?"Já existe uma equipe com esse nome.":"Informe o nome da equipe.";e.hidden=false;return}
       const out={...rec,nome,membros:q("#t-mem").value.trim(),criadoEm:rec.criadoEm||Date.now()};
       q("#t-save").disabled=true;if(await save("equipes",out)){close();toast(isNew?"Equipe adicionada.":"Equipe atualizada.")}else q("#t-save").disabled=false}
   });
@@ -1200,7 +1214,7 @@ async function exportXlsx(){
     const w3=wb.addWorksheet("Resumo por Equipe");
     w3.getRow(4).values=["Equipe","Funcionários","Instalações","Metragem utilizada (m)","Cabo restante (m)"];
     styleSheet(w3,[26,30,14,22,18],"Resumo por Equipe","Calculado a partir da aba Controle de Metragem (mesmos filtros)");
-    const teams=S.equipes.slice().sort((a,b)=>a.nome.localeCompare(b.nome));
+    const teams=S.equipes.slice().sort((a,b)=>String(a.nome||"").localeCompare(String(b.nome||"")));
     teams.forEach((t,k)=>{const n=5+k;const rs=ins.filter(r=>r.equipeId===t.id);const lf=lastFinal(t.id);
       w3.getRow(n).values=[t.nome,t.membros||"",{formula:`COUNTIF('Controle de Metragem'!C5:C${Math.max(5,last1)},A${n})`,result:rs.length},
         {formula:`SUMIF('Controle de Metragem'!C5:C${Math.max(5,last1)},A${n},'Controle de Metragem'!G5:G${Math.max(5,last1)})`,result:rs.reduce((s,r)=>s+(r.inicial-r.final),0)},lf?Number(lf.final):null];
