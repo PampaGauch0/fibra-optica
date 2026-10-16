@@ -210,6 +210,67 @@ html.m .seg button{height:42px;flex:1}html.m .seg{display:flex}
 html.m .menu{left:8px!important;right:8px;min-width:0}
 html.m .menu button{padding:14px 12px;font-size:16px}
 html.m .toast{bottom:calc(84px + env(safe-area-inset-bottom,0px));max-width:calc(100% - 32px)}
+
+/* ---------- Painel (gráficos) ---------- */
+:root{--c1:#2a78d6;--c2:#eb6834;--c3:#1baf7a;--c4:#eda100;--track:#e3e2dd;--grid:#ecebe7;--axis:#c3c2b7}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--c1:#3987e5;--c2:#d95926;--c3:#199e70;--c4:#c98500;--track:#34353a;--grid:#2a2b2f;--axis:#45464b}}
+:root[data-theme="dark"]{--c1:#3987e5;--c2:#d95926;--c3:#199e70;--c4:#c98500;--track:#34353a;--grid:#2a2b2f;--axis:#45464b}
+.dpre{display:inline-flex;gap:2px;background:var(--soft);padding:3px;border-radius:9px;flex-wrap:wrap}
+.dpre button{border:0;background:none;height:30px;padding:0 11px;border-radius:7px;cursor:pointer;color:var(--muted);font-weight:500}
+.dpre button[aria-pressed="true"]{background:var(--surface);color:var(--fg);box-shadow:0 1px 2px rgb(0 0 0/.08)}
+.dkpi{display:grid;grid-template-columns:1.6fr repeat(4,1fr);gap:12px;margin-top:16px}
+.kt{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;min-width:0}
+.kt small{display:block;color:var(--muted);font-size:12px}
+.kt b{display:block;font-size:24px;font-weight:600;margin-top:4px;letter-spacing:-.01em;white-space:nowrap}
+.kt span{display:block;color:var(--muted);font-size:12px;margin-top:2px}
+.kt.hero b{font-size:48px;line-height:1.05}
+.dgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:12px}
+.dcard{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;min-width:0}
+.dcard.wide{grid-column:1/-1}
+.dcard h3{margin:0;font-size:15px;font-weight:600}
+.dcard .sub{margin:2px 0 10px;font-size:12px;color:var(--muted)}
+.dcard .tablebox{margin-top:4px;border:0;border-radius:0}
+.dcard table{min-width:0}
+.dcard td,.dcard th{padding:9px 8px;font-size:13px}
+.dcard tr:last-child td{border-bottom:0}
+.chart{width:100%;position:relative}
+.chart svg{display:block;width:100%;overflow:visible}
+.chart text{font-family:var(--font);font-size:11px;fill:var(--muted)}
+.chart .v{fill:var(--fg);font-weight:600}
+.chart .nm{fill:var(--fg)}
+.chart .mk{cursor:default;outline:none}
+.chart .mk:hover .bar,.chart .mk:focus .bar{filter:brightness(1.12) saturate(1.05)}
+.chart .xh,.chart .hd{opacity:0}
+.chart .mk:hover .xh,.chart .mk:hover .hd,.chart .mk:focus .xh,.chart .mk:focus .hd{opacity:1}
+.chart .nodata{padding:40px 8px;text-align:center;color:var(--muted);font-size:13px}
+.lg{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:var(--muted);margin:0 0 8px}
+.lg span{display:inline-flex;align-items:center;gap:6px}
+.lg i{width:10px;height:10px;border-radius:2px;display:inline-block}
+.lg i.ln{height:2px;width:14px;border-radius:1px}
+.sdot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:middle}
+.dtip{position:fixed;z-index:30;pointer-events:none;background:var(--surface);border:1px solid var(--line);border-radius:8px;box-shadow:0 6px 18px rgb(0 0 0/.14);padding:8px 10px;font-size:12px;min-width:120px;max-width:260px}
+.dtip .tt{color:var(--muted);margin-bottom:4px}
+.dtip .tr{display:flex;align-items:center;gap:8px;white-space:nowrap}
+.dtip .tr i{width:12px;height:2px;border-radius:1px;flex:none}
+.dtip .tr b{font-weight:600;font-variant-numeric:tabular-nums}
+.dtip .tr span{color:var(--muted)}
+@media (max-width:1000px){.dkpi{grid-template-columns:repeat(2,1fr)}.dkpi .hero{grid-column:1/-1}}
+html.m .dkpi{grid-template-columns:repeat(2,1fr);gap:8px;margin-top:12px}
+html.m .dkpi .hero{grid-column:1/-1}
+html.m .kt{padding:12px}
+html.m .kt b{font-size:20px}
+html.m .kt.hero b{font-size:48px}
+html.m .dgrid{grid-template-columns:1fr;gap:10px}
+html.m .dcard{padding:14px 12px}
+html.m .dpre{display:flex;width:100%}
+html.m .dpre button{flex:1;height:38px;padding:0 6px}
+html.m .dcard .tablebox tr{border-radius:10px;padding:12px}
+html.m .dcard .tablebox td:last-child:not(.empty){border-top:0;padding-top:0;margin-top:0;display:block}
+html.m .dcard .tablebox tbody{gap:0}
+html.m .dcard .tablebox tr{border:0;border-bottom:1px solid var(--line);border-radius:0;padding:10px 0;gap:4px 12px}
+html.m .dcard .tablebox tr:last-child{border-bottom:0}
+html.m .dcard .tablebox td::before{font-size:10px}
+html.m .dcard .tablebox td.trunc{grid-column:auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 html{color-scheme:light}body{margin:0}[hidden]{display:none!important}
 </style>
@@ -233,6 +294,7 @@ html{color-scheme:light}body{margin:0}[hidden]{display:none!important}
 
 <main class="wrap" id="app" hidden>
   <div class="tabs" role="tablist">
+    <button role="tab" id="tab-dash" aria-selected="false" data-tab="dash" hidden>Painel</button>
     <button role="tab" id="tab-met" aria-selected="true" data-tab="met">Controle de Metragem</button>
     <button role="tab" id="tab-em" aria-selected="false" data-tab="em">Emendas e Fusões</button>
     <button role="tab" id="tab-cto" aria-selected="false" data-tab="cto">CTOs</button>
@@ -241,6 +303,26 @@ html{color-scheme:light}body{margin:0}[hidden]{display:none!important}
     <button role="tab" id="tab-ac" aria-selected="false" data-tab="ac" hidden>Acesso</button>
   </div>
   <div id="notice" class="notice" hidden></div>
+
+  <!-- PAINEL (gráficos de todas as abas) -->
+  <section id="pane-dash" hidden>
+    <div class="bar">
+      <div class="dpre" id="d-pre" role="group" aria-label="Período">
+        <button type="button" data-pre="7" aria-pressed="false">7 dias</button><button type="button" data-pre="30" aria-pressed="false">30 dias</button><button type="button" data-pre="90" aria-pressed="false">90 dias</button><button type="button" data-pre="365" aria-pressed="false">1 ano</button><button type="button" data-pre="all" aria-pressed="false">Tudo</button></div>
+      <div class="datef"><label for="d-de">De</label><input id="d-de" class="field" type="date"><label for="d-ate">Até</label><input id="d-ate" class="field" type="date"></div>
+      <span class="spacer"></span><span class="hint" id="d-info"></span>
+    </div>
+    <div class="dkpi" id="d-kpi"></div>
+    <div class="dgrid">
+      <div class="dcard wide"><h3>Metragem utilizada</h3><p class="sub" id="d-c1s">Metros de cabo usados nas instalações</p><div class="chart" id="d-c1"></div></div>
+      <div class="dcard"><h3>Metragem por equipe</h3><p class="sub">Metros usados no período</p><div class="chart" id="d-c2"></div></div>
+      <div class="dcard"><h3>Pendentes e resolvidos por setor</h3><p class="sub">Registros com data no período</p><div class="chart" id="d-c3"></div></div>
+      <div class="dcard wide"><h3>Registros lançados</h3><p class="sub" id="d-c4s">Quantidade de registros por setor</p><div class="chart" id="d-c4"></div></div>
+      <div class="dcard"><h3>Registros por cidade</h3><p class="sub">Emendas, CTOs e Infra</p><div class="chart" id="d-c5"></div></div>
+      <div class="dcard"><h3>Pendências mais antigas</h3><p class="sub">Ainda não resolvidas</p><div id="d-l1"></div></div>
+      <div class="dcard wide"><h3>Últimas alterações</h3><p class="sub">Quem alterou o quê, em todas as abas</p><div id="d-l2"></div></div>
+    </div>
+  </section>
 
   <!-- METRAGEM -->
   <section id="pane-met">
@@ -371,6 +453,7 @@ html{color-scheme:light}body{margin:0}[hidden]{display:none!important}
 <div id="modal-root"></div>
 <datalist id="cidades"></datalist>
 <div id="toast" class="toast" hidden></div>
+<div id="dtip" class="dtip" role="tooltip" hidden></div>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
@@ -393,7 +476,8 @@ const SETORES={
   metragem:{nome:"Controle de Metragem",abas:["met","eq"],cols:["equipes","instalacoes"]},
   emendas:{nome:"Emendas e Fusões",abas:["em"],cols:["emendas"]},
   ctos:{nome:"CTOs",abas:["cto"],cols:["ctos"]},
-  infra:{nome:"Infra",abas:["inf"],cols:["infra"]}};
+  infra:{nome:"Infra",abas:["inf"],cols:["infra"]},
+  painel:{nome:"Painel (gráficos)",abas:["dash"],cols:["equipes","instalacoes","emendas","ctos","infra"],soLeitura:true}};
 let MEUS_SETORES=[];
 const can=s=>IS_ADMIN||MEUS_SETORES.includes(s);
 const myCols=()=>COLS.filter(c=>Object.entries(SETORES).some(([k,v])=>can(k)&&v.cols.includes(c)));
@@ -540,12 +624,147 @@ $("#view-toggle").onclick=()=>{const now=document.documentElement.classList.cont
 function labelCells(){document.querySelectorAll(".tablebox table").forEach(t=>{const hs=[...t.querySelectorAll("thead th")].map(th=>th.textContent.trim());
   t.querySelectorAll("tbody tr").forEach(tr=>[...tr.children].forEach((td,i)=>td.setAttribute("data-label",td.classList.contains("empty")?"":(hs[i]||""))))})}
 
+/* ---------- painel (gráficos de todas as abas) ---------- */
+const DSET=[["instalacoes","Instalações","--c1","met"],["emendas","Emendas","--c2","em"],["ctos","CTOs","--c3","cto"],["infra","Infra","--c4","inf"]];
+const DNOME=Object.fromEntries(DSET.map(d=>[d[0],d]));
+let dPre="30";try{dPre=localStorage.getItem(LS+"-dpre")||"30"}catch(e){}
+const nfK=new Intl.NumberFormat("pt-BR",{notation:"compact",maximumFractionDigits:1}),nfI=new Intl.NumberFormat("pt-BR",{maximumFractionDigits:0});
+const kfmt=n=>Math.abs(n)>=10000?nfK.format(n):nfI.format(n);
+const pct=(a,b)=>b?Math.round(a/b*100)+"%":"—";
+const isoAdd=(iso,d)=>{const t=new Date(iso+"T12:00:00");t.setDate(t.getDate()+d);return t.toISOString().slice(0,10)};
+const dayDiff=(a,b)=>Math.round((new Date(b+"T12:00:00")-new Date(a+"T12:00:00"))/864e5);
+const MES=["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"];
+const dCols=()=>DSET.filter(([c])=>myCols().includes(c)&&!(S.bloq&&S.bloq[c])).map(d=>d[0]);
+const usado=r=>Math.max(0,(Number(r.inicial)||0)-(Number(r.final)||0));
+const recName=(col,r)=>col==="instalacoes"?[r.os?"OS "+r.os:"",teamName(r.equipeId)||r.equipeNome||""].filter(Boolean).join(" · ")||"Instalação":
+  col==="ctos"?(r.ctoId?"CTO "+r.ctoId:"")||r.os||"CTO":(r.cliente||(r.os?"OS "+r.os:"")||"Registro");
+function dRange(){if(dPre==="custom")return[$("#d-de").value,$("#d-ate").value];if(dPre==="all")return["",""];return[isoAdd(today(),-(+dPre-1)),today()]}
+function bucketer(de,ate){const span=dayDiff(de,ate);const g=span<=45?"d":span<=210?"w":"m";
+  const key=iso=>{if(g==="d")return iso;if(g==="m")return iso.slice(0,7);const t=new Date(iso+"T12:00:00");t.setDate(t.getDate()-((t.getDay()+6)%7));return t.toISOString().slice(0,10)};
+  const keys=[];let k=key(de);const end=key(ate);let guard=0;
+  while(k<=end&&guard++<800){keys.push(k);k=g==="d"?isoAdd(k,1):g==="w"?isoAdd(k,7):(()=>{let[y,m]=k.split("-").map(Number);m++;if(m>12){m=1;y++}return y+"-"+String(m).padStart(2,"0")})()}
+  const lab=k=>g==="m"?MES[+k.slice(5,7)-1]+"/"+k.slice(2,4):k.slice(8,10)+"/"+k.slice(5,7);
+  const long=k=>g==="m"?MES[+k.slice(5,7)-1]+" de "+k.slice(0,4):g==="w"?"Semana de "+fmtDate(k):fmtDate(k);
+  return{g,key,keys,lab,long,nome:g==="d"?"por dia":g==="w"?"por semana":"por mês"}}
+function niceStep(v){const raw=Math.max(v,1)/4,p=10**Math.floor(Math.log10(raw));let st=[1,2,5,10].find(m=>m*p>=raw)*p;return Math.max(1,st)}
+function niceMax(v){const st=niceStep(v);return Math.max(st,Math.ceil(v/st)*st)}
+const tt=o=>`data-tt="${esc(JSON.stringify(o))}"`;
+const colPath=(x,y,w,h,r)=>{r=Math.min(r,h,w/2);return`M${x},${y+h}V${y+r}Q${x},${y} ${x+r},${y}H${x+w-r}Q${x+w},${y} ${x+w},${y+r}V${y+h}Z`};
+const barPath=(x,y,w,h,r)=>{r=Math.min(r,w,h/2);return`M${x},${y}H${x+w-r}Q${x+w},${y} ${x+w},${y+r}V${y+h-r}Q${x+w},${y+h} ${x+w-r},${y+h}H${x}Z`};
+const nodata=m=>`<div class="nodata">${m||"Sem dados no período."}</div>`;
+const legend=(items,line)=>`<div class="lg">${items.map(([n,c])=>`<span><i class="${line?"ln":""}" style="background:var(${c})"></i>${esc(n)}</span>`).join("")}</div>`;
+/* eixo + grade horizontal compartilhados por colunas e linhas */
+function axes(W,H,pl,pr,pt,pb,max,keys,b){const ph=H-pt-pb,pw=W-pl-pr;let o="";
+  const st=niceStep(max),nt=Math.round(max/st);for(let i=0;i<=nt;i++){const v=st*i,y=pt+ph-ph*i/nt;o+=`<line x1="${pl}" x2="${W-pr}" y1="${y}" y2="${y}" stroke="var(${i?"--grid":"--axis"})" stroke-width="1"/><text x="${pl-8}" y="${y+4}" text-anchor="end" class="num">${kfmt(v)}</text>`}
+  const n=keys.length,step=Math.max(1,Math.ceil(n/Math.max(2,Math.floor(pw/58))));
+  keys.forEach((k,i)=>{if(i%step)return;const x=pl+pw*(i+.5)/n;o+=`<text x="${x}" y="${H-8}" text-anchor="middle">${esc(b.lab(k))}</text>`});return o}
+function colChart(el,b,vals,tips,color){const W=Math.max(el.clientWidth,260),H=220,pl=44,pr=8,pt=14,pb=26,n=b.keys.length,pw=W-pl-pr,ph=H-pt-pb;
+  const max=niceMax(Math.max(...vals,0)),band=pw/n,bw=Math.max(2,Math.min(24,band-2));let o=axes(W,H,pl,pr,pt,pb,max,b.keys,b);
+  const top=vals.indexOf(Math.max(...vals));
+  b.keys.forEach((k,i)=>{const v=vals[i],h=ph*v/max,x=pl+band*i+(band-bw)/2,y=pt+ph-h;
+    o+=`<g class="mk" tabindex="0" ${tt(tips[i])}>${v>0?`<path class="bar" d="${colPath(x,y,bw,h,4)}" fill="var(${color})"/>`:""}<rect x="${pl+band*i}" y="${pt}" width="${band}" height="${ph}" fill="transparent"/></g>`;
+    if(i===top&&v>0)o+=`<text class="v num" x="${x+bw/2}" y="${y-5}" text-anchor="middle">${kfmt(v)}</text>`});
+  el.innerHTML=`<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img">${o}</svg>`}
+function lineChart(el,b,series){const W=Math.max(el.clientWidth,260),H=220,pl=44,pr=14,pt=14,pb=26,n=b.keys.length,pw=W-pl-pr,ph=H-pt-pb;
+  const max=niceMax(Math.max(0,...series.flatMap(s=>s.vals)));let o=axes(W,H,pl,pr,pt,pb,max,b.keys,b);
+  const X=i=>pl+pw*(i+.5)/n,Y=v=>pt+ph-ph*v/max;
+  series.forEach(s=>{if(s.vals.length===1)return;o+=`<path d="${s.vals.map((v,i)=>(i?"L":"M")+X(i).toFixed(1)+","+Y(v).toFixed(1)).join("")}" fill="none" stroke="var(${s.c})" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`});
+  series.forEach(s=>{const i=n-1;o+=`<circle cx="${X(i)}" cy="${Y(s.vals[i])}" r="4" fill="var(${s.c})" stroke="var(--surface)" stroke-width="2"/>`});
+  b.keys.forEach((k,i)=>{const x=X(i);o+=`<g class="mk" tabindex="0" ${tt({t:b.long(k),r:series.map(s=>[s.c,nfI.format(s.vals[i]),s.n])})}><line class="xh" x1="${x}" x2="${x}" y1="${pt}" y2="${pt+ph}" stroke="var(--axis)" stroke-width="1"/>${series.map(s=>`<circle class="hd" cx="${x}" cy="${Y(s.vals[i])}" r="4" fill="var(${s.c})" stroke="var(--surface)" stroke-width="2"/>`).join("")}<rect x="${x-pw/n/2}" y="${pt}" width="${pw/n}" height="${ph}" fill="transparent"/></g>`});
+  el.innerHTML=legend(series.map(s=>[s.n,s.c]),true)+`<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img">${o}</svg>`}
+/* barras horizontais empilhadas; rows: [{n, segs:[{v,c,label}], tip, right}] */
+function hbarChart(el,rows,lg){if(!rows.length){el.innerHTML=nodata();return}
+  const W=Math.max(el.clientWidth,260),lw=Math.min(130,Math.round(W*.32)),rw=W<420?64:150,rh=34,bh=16,H=rows.length*rh+4,pw=W-lw-rw-8;
+  const max=Math.max(1,...rows.map(r=>r.segs.reduce((a,s)=>a+s.v,0)));let o="";
+  rows.forEach((r,i)=>{const y=i*rh+2,by=y+(rh-bh)/2;let x=lw;const tot=r.segs.reduce((a,s)=>a+s.v,0);
+    const name=r.n.length>18&&lw<120?r.n.slice(0,16)+"…":r.n;
+    o+=`<g class="mk" tabindex="0" ${tt(r.tip)}><text class="nm" x="${lw-10}" y="${y+rh/2+4}" text-anchor="end">${esc(name)}</text>`;
+    const vis=r.segs.filter(s=>s.v>0);
+    vis.forEach((s,j)=>{const w=pw*s.v/max,last=j===vis.length-1,gw=last?w:Math.max(1,w-2);
+      o+=`<path class="bar" d="${last?barPath(x,by,w,bh,4):`M${x},${by}h${gw}v${bh}h${-gw}Z`}" fill="var(${s.c})"/>`;x+=w});
+    o+=`<text class="v num" x="${lw+pw*tot/max+6}" y="${y+rh/2+4}">${esc(W<420?(r.short||kfmt(tot)):r.right)}</text><rect x="0" y="${y}" width="${W}" height="${rh}" fill="transparent"/></g>`});
+  el.innerHTML=(lg||"")+`<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img">${o}</svg>`}
+function renderDash(){const pane=$("#pane-dash");if(!pane||pane.hidden)return;
+  document.querySelectorAll("#d-pre button").forEach(x=>x.setAttribute("aria-pressed",x.dataset.pre===dPre));
+  let[de,ate]=dRange();if(dPre!=="custom"){$("#d-de").value=de;$("#d-ate").value=ate}
+  const cols=dCols(),has=c=>cols.includes(c);
+  if(!S.loaded){$("#d-kpi").innerHTML="";["#d-c1","#d-c2","#d-c3","#d-c4","#d-c5","#d-l1","#d-l2"].forEach(k=>$(k).innerHTML=nodata("Carregando…"));return}
+  const inP=r=>inRange(r.data||"",de,ate)&&!!r.data;
+  const D={};cols.forEach(c=>D[c]=(S[c]||[]).filter(inP));
+  // período efetivo para os gráficos de tempo
+  const all=cols.flatMap(c=>D[c].map(r=>r.data)).sort();
+  const gde=de||all[0]||today(),gate_=ate||all[all.length-1]||today();
+  const b=bucketer(gde<=gate_?gde:gate_,gate_);
+  $("#d-info").textContent=(de||ate)?`${fmtDate(gde)} a ${fmtDate(gate_)}`:"Todo o histórico";
+  // KPIs
+  const ins=D.instalacoes||[],met=ins.reduce((a,r)=>a+usado(r),0);
+  const pend=["emendas","ctos","infra"].filter(has).flatMap(c=>D[c]),nP=pend.filter(r=>!r.resolvido).length,nR=pend.length-nP;
+  const k=[];
+  if(has("instalacoes")){k.push(`<div class="kt hero"><small>Metragem utilizada</small><b>${nfI.format(met)} m</b><span>${nfI.format(ins.length)} instalações no período</span></div>`);
+    k.push(`<div class="kt"><small>Média por instalação</small><b>${ins.length?nfI.format(met/ins.length):"—"} m</b><span>${S.equipes.filter(t=>t.ativa!==false).length} equipes ativas</span></div>`)}
+  if(pend.length||["emendas","ctos","infra"].some(has)){
+    k.push(`<div class="kt"><small>Pendentes</small><b>${nfI.format(nP)}</b><span>Emendas, CTOs e Infra</span></div>`);
+    k.push(`<div class="kt"><small>Resolvidos</small><b>${nfI.format(nR)}</b><span>${pct(nR,pend.length)} do período</span></div>`);
+    const ab=["emendas","ctos","infra"].filter(has).flatMap(c=>S[c]).filter(r=>!r.resolvido).length;
+    k.push(`<div class="kt"><small>Total em aberto hoje</small><b>${nfI.format(ab)}</b><span>Sem filtro de período</span></div>`)}
+  $("#d-kpi").innerHTML=k.join("");
+  // 1. metragem no tempo
+  const c1=$("#d-c1");$("#d-c1s").textContent=`Metros de cabo usados nas instalações, ${b.nome}`;
+  if(!has("instalacoes"))c1.closest(".dcard").hidden=true;else{c1.closest(".dcard").hidden=false;
+    const mv=b.keys.map(()=>0),mc=b.keys.map(()=>0),ix=Object.fromEntries(b.keys.map((k,i)=>[k,i]));
+    ins.forEach(r=>{const i=ix[b.key(r.data)];if(i!=null){mv[i]+=usado(r);mc[i]++}});
+    if(!ins.length)c1.innerHTML=nodata();else colChart(c1,b,mv,b.keys.map((k,i)=>({t:b.long(k),r:[["--c1",nfI.format(mv[i])+" m","metragem"],["",nfI.format(mc[i]),mc[i]===1?"instalação":"instalações"]]})),"--c1")}
+  // 2. por equipe
+  const c2=$("#d-c2");c2.closest(".dcard").hidden=!has("instalacoes");
+  if(has("instalacoes")){const by={};ins.forEach(r=>{const n=teamName(r.equipeId)||r.equipeNome||"Sem equipe";(by[n]=by[n]||{m:0,q:0});by[n].m+=usado(r);by[n].q++});
+    hbarChart(c2,Object.entries(by).sort((a,b)=>b[1].m-a[1].m).slice(0,10).map(([n,v])=>({n,segs:[{v:v.m,c:"--c1"}],right:nfI.format(v.m)+" m",tip:{t:n,r:[["--c1",nfI.format(v.m)+" m","metragem"],["",nfI.format(v.q),v.q===1?"instalação":"instalações"]]}})))}
+  // 3. status por setor
+  const st=["emendas","ctos","infra"].filter(has),c3=$("#d-c3");c3.closest(".dcard").hidden=!st.length;
+  if(st.length){const rows=st.map(c=>{const[,n,cv]=DNOME[c];const p=D[c].filter(r=>!r.resolvido).length,o=D[c].length-p;
+      return{n,segs:[{v:p,c:cv},{v:o,c:"--track"}],right:`${p} pend. · ${o} resolv.`,short:`${p} pend.`,tip:{t:n,r:[[cv,nfI.format(p),"pendentes"],["--track",nfI.format(o),"resolvidos"],["",pct(o,p+o),"resolvidos"]]}}});
+    hbarChart(c3,rows.some(r=>r.segs[0].v+r.segs[1].v)?rows:[],`<div class="lg"><span><i style="background:var(--c2)"></i><i style="background:var(--c3);margin-left:-4px"></i><i style="background:var(--c4);margin-left:-4px"></i>Pendentes (cor do setor)</span><span><i style="background:var(--track)"></i>Resolvidos</span></div>`)}
+  // 4. registros por setor no tempo
+  const c4=$("#d-c4");$("#d-c4s").textContent=`Quantidade de registros lançados, ${b.nome}`;
+  {const ix=Object.fromEntries(b.keys.map((k,i)=>[k,i]));const ser=cols.map(c=>{const[,n,cv]=DNOME[c];const vals=b.keys.map(()=>0);D[c].forEach(r=>{const i=ix[b.key(r.data)];if(i!=null)vals[i]++});return{n,c:cv,vals}});
+    if(!ser.some(s=>s.vals.some(v=>v)))c4.innerHTML=nodata();else lineChart(c4,b,ser)}
+  // 5. por cidade
+  const c5=$("#d-c5");c5.closest(".dcard").hidden=!st.length;
+  if(st.length){const by={};st.forEach(c=>D[c].forEach(r=>{const n=titleCase(r.cidade)||"Sem cidade";(by[n]=by[n]||{});by[n][c]=(by[n][c]||0)+1}));
+    let ent=Object.entries(by).map(([n,v])=>[n,v,st.reduce((a,c)=>a+(v[c]||0),0)]).sort((a,b)=>b[2]-a[2]);
+    if(ent.length>8){const rest=ent.slice(7),o={};rest.forEach(([,v])=>st.forEach(c=>o[c]=(o[c]||0)+(v[c]||0)));ent=ent.slice(0,7).concat([[`Outras (${rest.length})`,o,rest.reduce((a,e)=>a+e[2],0)]])}
+    hbarChart(c5,ent.map(([n,v,t])=>({n,segs:st.map(c=>({v:v[c]||0,c:DNOME[c][2]})),right:nfI.format(t),tip:{t:n,r:st.map(c=>[DNOME[c][2],nfI.format(v[c]||0),DNOME[c][1]])}})),legend(st.map(c=>[DNOME[c][1],DNOME[c][2]])))}
+  // 6. pendências mais antigas
+  const l1=$("#d-l1");l1.closest(".dcard").hidden=!st.length;
+  if(st.length){const ps=st.flatMap(c=>D[c].filter(r=>!r.resolvido).map(r=>({c,r}))).sort((a,b)=>(a.r.data||"").localeCompare(b.r.data||"")).slice(0,document.documentElement.classList.contains("m")?5:8);
+    l1.innerHTML=!ps.length?nodata("Nenhuma pendência no período. ✓"):`<div class="tablebox"><table><thead><tr><th>Setor</th><th>Registro</th><th>Cidade</th><th>Data</th><th class="r">Em aberto</th></tr></thead><tbody>${ps.map(({c,r})=>{const d=Math.max(0,dayDiff(r.data,today()));return`<tr><td><span class="sdot" style="background:var(${DNOME[c][2]})"></span>${esc(DNOME[c][1])}</td><td class="trunc" title="${esc(recName(c,r))}">${esc(recName(c,r))}</td><td>${esc(titleCase(r.cidade)||"—")}</td><td class="num">${fmtDate(r.data)}</td><td class="r num"><b>${d}</b> ${d===1?"dia":"dias"}</td></tr>`}).join("")}</tbody></table></div>`}
+  // 7. últimas alterações
+  const hs=cols.flatMap(c=>(S[c]||[]).flatMap(r=>(r.historico||[]).map(h=>({c,r,h})))).filter(x=>{const d=new Date(x.h.em);d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return inRange(d.toISOString().slice(0,10),de,ate)}).sort((a,b)=>b.h.em-a.h.em).slice(0,document.documentElement.classList.contains("m")?6:10);
+  $("#d-l2").innerHTML=!hs.length?nodata("Nenhuma alteração no período."):`<div class="tablebox"><table><thead><tr><th>Quando</th><th>Quem</th><th>Setor</th><th>Registro</th><th>O que mudou</th></tr></thead><tbody>${hs.map(({c,r,h})=>`<tr><td class="num">${esc(fmtDT(h.em).slice(0,17))}</td><td class="trunc" title="${esc(h.email||"")}">${esc(h.nome||h.email||"—")}</td><td><span class="sdot" style="background:var(${DNOME[c][2]})"></span>${esc(DNOME[c][1])}</td><td class="trunc" title="${esc(recName(c,r))}">${esc(recName(c,r))}</td><td class="trunc">${esc(h.acao||"")}${h.mudancas&&h.mudancas.length?`: ${esc(h.mudancas.map(m=>m.campo).join(", "))}`:""}</td></tr>`).join("")}</tbody></table></div>`;
+  labelCells()}
+/* tooltip único do painel (texto via textContent) */
+(function(){const tip=$("#dtip");let cur=null;
+  function show(m,x,y){if(m!==cur){cur=m;let o;try{o=JSON.parse(m.dataset.tt)}catch(e){return}
+      tip.textContent="";const t=document.createElement("div");t.className="tt";t.textContent=o.t||"";tip.append(t);
+      (o.r||[]).forEach(([c,v,l])=>{const r=document.createElement("div");r.className="tr";const i=document.createElement("i");if(c)i.style.background=`var(${c})`;const b=document.createElement("b");b.textContent=v;const s=document.createElement("span");s.textContent=l;r.append(i,b,s);tip.append(r)})}
+    tip.hidden=false;const w=tip.offsetWidth,h=tip.offsetHeight;let L=x+14,T=y+14;if(L+w>innerWidth-8)L=x-w-14;if(T+h>innerHeight-8)T=y-h-14;tip.style.left=Math.max(8,L)+"px";tip.style.top=Math.max(8,T)+"px"}
+  const hide=()=>{cur=null;tip.hidden=true};
+  const pane=$("#pane-dash");
+  pane.addEventListener("pointermove",e=>{const m=e.target.closest&&e.target.closest("[data-tt]");m?show(m,e.clientX,e.clientY):hide()});
+  pane.addEventListener("pointerleave",hide);
+  pane.addEventListener("focusin",e=>{const m=e.target.closest("[data-tt]");if(m){const r=m.getBoundingClientRect();show(m,r.left+r.width/2,r.top)}else hide()});
+  pane.addEventListener("focusout",hide);window.addEventListener("scroll",hide,true);
+  $("#d-pre").addEventListener("click",e=>{const x=e.target.closest("[data-pre]");if(!x)return;dPre=x.dataset.pre;try{localStorage.setItem(LS+"-dpre",dPre)}catch(e){}renderDash()});
+  ["#d-de","#d-ate"].forEach(k=>$(k).addEventListener("change",()=>{dPre="custom";renderDash()}));
+  let rt;window.addEventListener("resize",()=>{clearTimeout(rt);rt=setTimeout(()=>{if(tab==="dash")renderDash()},150)});
+})();
+
 /* ---------- abas ---------- */
 let tab="met";
 document.querySelectorAll("[data-tab]").forEach(b=>b.onclick=()=>{tab=b.dataset.tab;
   document.querySelectorAll("[data-tab]").forEach(x=>x.setAttribute("aria-selected",x===b));
-  ["met","em","cto","inf","eq","ac"].forEach(k=>$("#pane-"+k).hidden=k!==tab);
-  try{localStorage.setItem(LS+"-tab",tab)}catch(e){}});
+  ["dash","met","em","cto","inf","eq","ac"].forEach(k=>$("#pane-"+k).hidden=k!==tab);
+  try{localStorage.setItem(LS+"-tab",tab)}catch(e){}
+  if(tab==="dash")renderDash()});
 
 
 /* ---------- helpers de domínio ---------- */
@@ -690,6 +909,7 @@ function render(){
       <div class="row"><span>Metragem utilizada</span><b class="num">${fmt(used)} m</b></div>
       <div class="row"><span>Cabo restante</span><b class="num">${lf?fmt(lf.final)+" m":"—"}</b></div>
       <div class="acts"><button class="btn" data-edit-t="${esc(t.id)}">Editar</button><button class="btn ghost" data-act-t="${esc(t.id)}">${t.ativa===false?"Reativar":"Desativar"}</button>${IS_ADMIN?`<button class="btn ghost" data-del-t="${esc(t.id)}">Excluir</button>`:""}</div></div>`}).join("");
+  if(tab==="dash")renderDash();
   labelCells();
 }
 ["#m-q","#m-eq","#m-de","#m-ate","#e-q","#e-tipo","#e-st","#e-de","#e-ate","#c-q","#c-cid","#c-st","#c-de","#c-ate","#f-q","#f-cid","#f-st","#f-de","#f-ate"].forEach(s=>$(s).addEventListener("input",render));
